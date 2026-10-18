@@ -1,0 +1,28 @@
+{
+  "app": { "name": "PullBinder" },
+  "nav": {
+    "label": "Main",
+    "search": "Search",
+    "collection": "Collection",
+    "account": "Account"
+  },
+  "search": {
+    "title": "Search cards",
+    "label": "Card name",
+    "placeholder": "Search the catalog",
+    "clear": "Clear search",
+    "hint": "Catalog search arrives with the next release."
+  },
+  "collection": {
+    "title": "Collection",
+    "emptyTitle": "No cards yet",
+    "emptyBody": "Cards you add will show up here."
+  },
+  "account": {
+    "title": "Account",
+    "language": "App language",
+    "languageHint": "This is the language of the interface, not of your cards.",
+    "lang": { "en": "English", "pt-BR": "Português (Brasil)" }
+  },
+  "ui": { "loading": "Loading" }
+}
