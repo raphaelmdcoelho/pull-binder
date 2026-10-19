@@ -15,5 +15,6 @@ pull-binder consumes the sibling design system `grass-ds` (`../grass-ds`). When 
 
 - Remote: `origin` is https://github.com/raphaelmdcoelho/pull-binder.git (public). Default branch: `main`.
 - Commits follow Conventional Commits, enforced by the husky `commit-msg` hook (commitlint). Allowed scopes: `app|i18n|ui|catalog|collection|auth|db|pwa|ci|repo|deps|docs|release`. Never bypass the hooks with `--no-verify`.
-- The user has authorised committing completed, verified work (lint, tests and build green) in logical commits. Pushing, opening PRs, and creating tags or releases still need an explicit request from the user; releases are produced only by the `release.yml` workflow.
+- Work happens on a feature branch (`feat/...`, `fix/...`, `docs/...`), never directly on `main`. Every change reaches `main` through a pull request that the user reviews and merges. Open the PR as soon as the branch is pushed, with a body following the `pr` skill template.
+- The user has authorised committing completed, verified work (lint, tests and build green) in logical commits on a feature branch, pushing that branch, and opening its PR. Never push to `main`, never merge a PR, and never create tags or releases unless the user asks; releases are produced only by the `release.yml` workflow. A merge to `main` deploys the live site.
 - Never commit secrets, `.env*` files or the `.maestri/` folder.
