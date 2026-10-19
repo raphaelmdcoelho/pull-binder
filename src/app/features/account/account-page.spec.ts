@@ -31,6 +31,13 @@ describe('AccountPage', () => {
     return { fake, fixture, el: fixture.nativeElement as HTMLElement };
   }
 
+  it('shows the app version', async () => {
+    const { el } = await setup();
+    expect(el.querySelector('[data-testid="app-version"]')?.textContent?.trim()).toBe(
+      'Version dev',
+    );
+  });
+
   it('shows who is signed in', async () => {
     const { el } = await setup();
     expect(el.textContent).toContain('Ash Ketchum');

@@ -74,7 +74,18 @@ let failed = 0;
 const db = new PGlite();
 await db.exec(supabaseStub);
 
-for (const file of readdirSync(join(root, 'migrations')).sort()) {
+// The Supabase CLI keys its history on the 14-digit version prefix; a wrong name is silently skipped.
+const migrationFiles = readdirSync(join(root, 'migrations')).sort();
+const versions = new Set();
+for (const file of migrationFiles) {
+  const version = /^(\d{14})_[a-z0-9_]+\.sql$/.exec(file)?.[1];
+  if (!version || versions.has(version)) {
+    console.error(`Bad or duplicate migration file name: ${file}`);
+    process.exit(1);
+  }
+  versions.add(version);
+}
+for (const file of migrationFiles) {
   await db.exec(readFileSync(join(root, 'migrations', file), 'utf8'));
   console.log(`migrated  ${file}`);
 }

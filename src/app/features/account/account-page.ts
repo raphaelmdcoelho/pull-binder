@@ -6,6 +6,7 @@ import { CollectionStore } from '../../collection/collection.store';
 import { AuthService } from '../../core/auth/auth.service';
 import { LanguageService } from '../../core/i18n/language.service';
 import { SUPPORTED_LANGS, isAppLang } from '../../core/i18n/languages';
+import { APP_COMMIT, APP_VERSION } from '../../version';
 import { PbSelect } from '../../shared/ui/select/select';
 
 @Component({
@@ -49,6 +50,10 @@ import { PbSelect } from '../../shared/ui/select/select';
       <button grButton variant="secondary" type="button" (click)="signOut()">
         {{ 'auth.signOut' | transloco }}
       </button>
+
+      <p class="gr-text-small gr-text-muted" data-testid="app-version">
+        {{ 'account.version' | transloco: { version: version } }}
+      </p>
     </div>
   `,
 })
@@ -58,6 +63,7 @@ export class AccountPage {
   private readonly router = inject(Router);
   private readonly collection = inject(CollectionStore);
   protected readonly langs = SUPPORTED_LANGS;
+  protected readonly version = APP_COMMIT ? `${APP_VERSION} (${APP_COMMIT})` : APP_VERSION;
 
   protected onChange(value: string): void {
     if (isAppLang(value)) void this.language.set(value);
