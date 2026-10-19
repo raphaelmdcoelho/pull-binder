@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { GrButton } from '@grass-ds/angular';
 import { TranslocoPipe } from '@jsverse/transloco';
+import { CollectionStore } from '../../collection/collection.store';
 import { AuthService } from '../../core/auth/auth.service';
 import { LanguageService } from '../../core/i18n/language.service';
 import { SUPPORTED_LANGS, isAppLang } from '../../core/i18n/languages';
@@ -55,6 +56,7 @@ export class AccountPage {
   protected readonly auth = inject(AuthService);
   protected readonly language = inject(LanguageService);
   private readonly router = inject(Router);
+  private readonly collection = inject(CollectionStore);
   protected readonly langs = SUPPORTED_LANGS;
 
   protected onChange(value: string): void {
@@ -63,6 +65,7 @@ export class AccountPage {
 
   protected async signOut(): Promise<void> {
     await this.auth.signOut();
+    this.collection.reset();
     await this.router.navigateByUrl('/login');
   }
 }

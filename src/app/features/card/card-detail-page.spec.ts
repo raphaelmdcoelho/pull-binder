@@ -4,6 +4,7 @@ import { Card } from '../../catalog/card.model';
 import { CatalogError } from '../../catalog/catalog.service';
 import { LanguageService } from '../../core/i18n/language.service';
 import { FakeCatalog, provideFakeCatalog } from '../../../testing/fake-catalog';
+import { FakeOwnedCards, provideFakeOwnedCards } from '../../../testing/fake-owned-cards';
 import { provideTestI18n } from '../../../testing/transloco';
 import { CardDetailPage } from './card-detail-page';
 
@@ -24,7 +25,12 @@ async function setup(fake: FakeCatalog) {
   localStorage.clear();
   TestBed.configureTestingModule({
     imports: [CardDetailPage],
-    providers: [provideRouter([]), provideTestI18n(), provideFakeCatalog(fake)],
+    providers: [
+      provideRouter([]),
+      provideTestI18n(),
+      provideFakeCatalog(fake),
+      provideFakeOwnedCards(new FakeOwnedCards()),
+    ],
   });
   await TestBed.inject(LanguageService).set('en');
   const fixture = TestBed.createComponent(CardDetailPage);

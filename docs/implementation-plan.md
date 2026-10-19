@@ -270,3 +270,13 @@ If branch protection blocks semantic-release's `git` plugin commit (CHANGELOG/pa
 - Images are hotlinked as `<image base>/low.webp` (grid) and `/high.webp` (detail). API and assets send `access-control-allow-origin: *`, so the M6 service worker can cache them without opaque responses.
 - `SearchStore` is root-scoped so results survive tab switches; stale answers to older queries are dropped. A card detail page (`/card/:id`) was added because M4's add form starts from it.
 - New shim: `pb-card-image` and the card grid CSS (grass-ds gap 9).
+
+## 12. M4 as built (2026-10-19)
+
+- `OwnedCardsRepository` (port) with a Supabase implementation. Adding inserts first; on a unique-key conflict (23505) it reads the row and updates `quantity` with a compare-and-swap (`.eq('quantity', old)`), retrying up to 4 times, and refreshes the snapshot columns. No SQL change was needed, so the hosted project needs nothing new. A server-side `add_owned_card` RPC would make it one atomic round trip; consider it if concurrent-tab races show up.
+- `image_url` stores the Catalog image **base** URL (no size suffix); the app adds `/low.webp` or `/high.webp`.
+- The add dialog (`gr-dialog`) is hosted once per page and opened with a Card or a card id (the search grid's quick add fetches the Card through the Catalog first). Language defaults to the Card's language, finishes are limited to the Card's own.
+- Feedback: `StatusService` + `pb-status-region` (an always-present live region; role=status for success, role=alert for errors) stand in for a toast.
+- The Collection page lists Owned cards newest first (up to 1000, no filters yet). The store reloads after an add and is cleared on sign-out.
+- Verified on the local stack with Docker: real pgTAP 18/18 and `scripts/verify-local-rls.mjs` 15/15 (two real users, conflicts, compare-and-swap, cross-user isolation, anon).
+- Missing grass-ds components used as shims: Toast (gap 7), Stepper (gap 11), Image/card grid (gap 9). Still missing and worked around with plain markup: Badge/Chip (gap 8, condition/language/finish shown as a text list), Empty state (gap 6), Select hint/error styling.

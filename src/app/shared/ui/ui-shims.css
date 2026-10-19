@@ -260,6 +260,88 @@
     overflow-wrap: anywhere;
   }
 
+  /* Gap 7: toast (live status message above the tab bar) */
+  .pb-status {
+    position: fixed;
+    inset-inline: var(--gr-space-4);
+    inset-block-end: calc(4.5rem + env(safe-area-inset-bottom));
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--gr-space-3);
+    max-inline-size: var(--gr-size-measure-md);
+    margin-inline: auto;
+    padding: var(--gr-space-3) var(--gr-space-4);
+    color: var(--gr-color-feedback-success-text);
+    background: var(--gr-color-feedback-success-surface);
+    border: var(--gr-border-width) solid var(--gr-color-feedback-success-border);
+    border-radius: var(--gr-corner-md);
+    box-shadow: var(--gr-shadow-soft);
+  }
+  .pb-status[data-kind='error'] {
+    color: var(--gr-color-feedback-danger-text);
+    background: var(--gr-color-feedback-danger-surface);
+    border-color: var(--gr-color-feedback-danger-border);
+  }
+  .pb-status[hidden] {
+    display: none;
+  }
+  .pb-status__close {
+    min-block-size: 2.75rem;
+    padding-inline: var(--gr-space-2);
+    color: inherit;
+    font: inherit;
+    text-decoration: underline;
+    background: none;
+    border: 0;
+    cursor: pointer;
+  }
+
+  /* Gap 11: quantity stepper */
+  .pb-stepper {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: var(--gr-space-2);
+    align-items: stretch;
+  }
+  .pb-stepper .gr-button {
+    min-inline-size: 2.75rem;
+    min-block-size: 2.75rem;
+  }
+  .pb-stepper__input {
+    text-align: center;
+  }
+
+  /* Owned card row in the Collection */
+  .pb-owned-list {
+    display: grid;
+    gap: var(--gr-space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .pb-owned {
+    display: grid;
+    grid-template-columns: 4.5rem minmax(0, 1fr);
+    gap: var(--gr-space-3);
+    align-items: start;
+  }
+  .pb-owned__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--gr-space-1) var(--gr-space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: var(--gr-text-size-small);
+    color: var(--gr-color-text-muted);
+  }
+  .pb-owned__qty {
+    font-weight: var(--gr-text-weight-emphasis);
+    color: var(--gr-color-text-default);
+  }
+
   @keyframes pb-spin {
     to {
       transform: rotate(360deg);

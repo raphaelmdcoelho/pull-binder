@@ -1,15 +1,25 @@
-import { ChangeDetectionStrategy, Component, effect, inject, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  effect,
+  inject,
+  input,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { GrButton } from '@grass-ds/angular';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { Card, cardImageUrl } from '../../catalog/card.model';
 import { CatalogError, CatalogService, toCatalogLang } from '../../catalog/catalog.service';
 import { LanguageService } from '../../core/i18n/language.service';
 import { CardImage } from '../../shared/ui/card-image/card-image';
 import { Spinner } from '../../shared/ui/spinner/spinner';
+import { AddOwnedCardDialog } from '../collection/add/add-owned-card-dialog';
 
 @Component({
   selector: 'pb-card-detail-page',
-  imports: [TranslocoPipe, RouterLink, CardImage, Spinner],
+  imports: [TranslocoPipe, RouterLink, GrButton, CardImage, Spinner, AddOwnedCardDialog],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="gr-stack">
@@ -19,6 +29,9 @@ import { Spinner } from '../../shared/ui/spinner/spinner';
       } @else if (card(); as c) {
         <h1 class="gr-display">{{ c.name }}</h1>
         <pb-card-image [src]="image(c)" [alt]="c.name + ' ' + c.number" [eager]="true" />
+        <button grButton type="button" (click)="add().openFor(c)">
+          {{ 'add.open' | transloco }}
+        </button>
         <dl class="gr-stack">
           <div>
             <dt class="gr-text-muted">{{ 'card.set' | transloco }}</dt>
@@ -43,6 +56,7 @@ import { Spinner } from '../../shared/ui/spinner/spinner';
         <pb-spinner [label]="'search.loading' | transloco" />
       }
     </div>
+    <pb-add-owned-card-dialog />
   `,
 })
 export class CardDetailPage {
@@ -51,6 +65,7 @@ export class CardDetailPage {
 
   /** Bound from the route parameter. */
   readonly id = input.required<string>();
+  protected readonly add = viewChild.required(AddOwnedCardDialog);
 
   protected readonly card = signal<Card | null>(null);
   protected readonly error = signal<string | null>(null);

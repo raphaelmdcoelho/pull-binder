@@ -32,7 +32,16 @@
   "collection": {
     "title": "Collection",
     "emptyTitle": "No cards yet",
-    "emptyBody": "Cards you add will show up here."
+    "emptyBody": "Cards you add will show up here.",
+    "findCards": "Find cards",
+    "summary": "{{entries}} entries, {{copies}} cards in total",
+    "errorTitle": "Could not load your collection",
+    "errors": {
+      "network": "Can't reach the server. Check your connection.",
+      "unauthenticated": "Please log in again.",
+      "quantity-limit": "Something went wrong.",
+      "unknown": "Something went wrong while loading."
+    }
   },
   "account": {
     "title": "Account",
@@ -46,7 +55,8 @@
     "name": "Name"
   },
   "ui": {
-    "loading": "Loading"
+    "loading": "Loading",
+    "dismiss": "Dismiss"
   },
   "auth": {
     "loginTitle": "Log in",
@@ -95,5 +105,52 @@
     "holo": "Holo",
     "reverse_holo": "Reverse holo",
     "other": "Other"
+  },
+  "add": {
+    "open": "Add to collection",
+    "quick": "Add to collection",
+    "quickShort": "Add",
+    "title": "Add to collection",
+    "quantity": "Quantity",
+    "decrease": "One fewer",
+    "increase": "One more",
+    "condition": "Condition",
+    "language": "Card language",
+    "languageHint": "The language printed on your card.",
+    "finish": "Finish",
+    "cancel": "Cancel",
+    "submit": "Add",
+    "adding": "Adding",
+    "added": "Added {{count}} × {{name}} to your collection. You now have {{total}}.",
+    "errors": {
+      "quantity-limit": "You can hold at most 9999 copies of the same card.",
+      "unauthenticated": "Please log in again to add cards.",
+      "network": "Can't reach the server. Check your connection and try again.",
+      "unknown": "Could not add the card. Try again."
+    }
+  },
+  "condition": {
+    "near_mint": "Near Mint",
+    "lightly_played": "Lightly Played",
+    "moderately_played": "Moderately Played",
+    "heavily_played": "Heavily Played",
+    "damaged": "Damaged"
+  },
+  "language": {
+    "en": "English",
+    "pt": "Português",
+    "es": "Español",
+    "fr": "Français",
+    "de": "Deutsch",
+    "it": "Italiano",
+    "nl": "Nederlands",
+    "pl": "Polski",
+    "ru": "Русский",
+    "ja": "日本語",
+    "ko": "한국어",
+    "zh-tw": "中文（繁體）",
+    "zh-cn": "中文（简体）",
+    "id": "Bahasa Indonesia",
+    "th": "ไทย"
   }
 }

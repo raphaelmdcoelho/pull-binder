@@ -10,6 +10,7 @@ import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { provideServiceWorker } from '@angular/service-worker';
 import { routes } from './app.routes';
 import { provideCatalog } from './catalog/catalog.providers';
+import { provideCollection } from './collection/collection.providers';
 import { provideI18n } from './core/i18n/i18n.providers';
 import { LanguageService } from './core/i18n/language.service';
 import { AuthService } from './core/auth/auth.service';
@@ -21,6 +22,7 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(withFetch()),
     provideI18n(),
     provideCatalog(),
+    provideCollection(),
     provideAppInitializer(() => inject(LanguageService).init()),
     provideAppInitializer(() => inject(AuthService).init()),
     provideServiceWorker('ngsw-worker.js', {

@@ -32,7 +32,16 @@
   "collection": {
     "title": "Coleção",
     "emptyTitle": "Nenhuma carta ainda",
-    "emptyBody": "As cartas que você adicionar aparecerão aqui."
+    "emptyBody": "As cartas que você adicionar aparecerão aqui.",
+    "findCards": "Buscar cartas",
+    "summary": "{{entries}} itens, {{copies}} cartas no total",
+    "errorTitle": "Não foi possível carregar sua coleção",
+    "errors": {
+      "network": "Não foi possível acessar o servidor. Verifique sua conexão.",
+      "unauthenticated": "Entre novamente.",
+      "quantity-limit": "Algo deu errado.",
+      "unknown": "Algo deu errado ao carregar."
+    }
   },
   "account": {
     "title": "Conta",
@@ -46,7 +55,8 @@
     "name": "Nome"
   },
   "ui": {
-    "loading": "Carregando"
+    "loading": "Carregando",
+    "dismiss": "Dispensar"
   },
   "auth": {
     "loginTitle": "Entrar",
@@ -95,5 +105,52 @@
     "holo": "Holo",
     "reverse_holo": "Reverse holo",
     "other": "Outro"
+  },
+  "add": {
+    "open": "Adicionar à coleção",
+    "quick": "Adicionar à coleção",
+    "quickShort": "Adicionar",
+    "title": "Adicionar à coleção",
+    "quantity": "Quantidade",
+    "decrease": "Uma a menos",
+    "increase": "Mais uma",
+    "condition": "Condição",
+    "language": "Idioma da carta",
+    "languageHint": "O idioma impresso na sua carta.",
+    "finish": "Acabamento",
+    "cancel": "Cancelar",
+    "submit": "Adicionar",
+    "adding": "Adicionando",
+    "added": "{{count}} × {{name}} adicionada(s) à sua coleção. Agora você tem {{total}}.",
+    "errors": {
+      "quantity-limit": "Você pode ter no máximo 9999 cópias da mesma carta.",
+      "unauthenticated": "Entre novamente para adicionar cartas.",
+      "network": "Não foi possível acessar o servidor. Verifique sua conexão e tente de novo.",
+      "unknown": "Não foi possível adicionar a carta. Tente novamente."
+    }
+  },
+  "condition": {
+    "near_mint": "Quase perfeita (NM)",
+    "lightly_played": "Pouco usada (LP)",
+    "moderately_played": "Usada (MP)",
+    "heavily_played": "Muito usada (HP)",
+    "damaged": "Danificada"
+  },
+  "language": {
+    "en": "English",
+    "pt": "Português",
+    "es": "Español",
+    "fr": "Français",
+    "de": "Deutsch",
+    "it": "Italiano",
+    "nl": "Nederlands",
+    "pl": "Polski",
+    "ru": "Русский",
+    "ja": "日本語",
+    "ko": "한국어",
+    "zh-tw": "中文（繁體）",
+    "zh-cn": "中文（简体）",
+    "id": "Bahasa Indonesia",
+    "th": "ไทย"
   }
 }

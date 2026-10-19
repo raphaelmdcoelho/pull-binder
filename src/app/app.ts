@@ -3,15 +3,17 @@ import { RouterOutlet } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { AuthService } from './core/auth/auth.service';
 import { AppShell } from './shared/ui/app-shell/app-shell';
+import { StatusRegion } from './shared/ui/status-region/status-region';
 import { TabBar, TabBarItem } from './shared/ui/tab-bar/tab-bar';
 
 @Component({
   selector: 'pb-root',
-  imports: [RouterOutlet, TranslocoPipe, AppShell, TabBar],
+  imports: [RouterOutlet, TranslocoPipe, AppShell, TabBar, StatusRegion],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <pb-app-shell>
       <router-outlet />
+      <pb-status-region />
       @if (auth.isAuthenticated()) {
         <pb-tab-bar nav [items]="tabs" [label]="'nav.label' | transloco" />
       }

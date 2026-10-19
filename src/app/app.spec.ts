@@ -5,6 +5,8 @@ import { createFakeSupabase, provideFakeSupabase, sessionFor } from '../testing/
 import { provideTestI18n } from '../testing/transloco';
 import { AuthService } from './core/auth/auth.service';
 import { LanguageService } from './core/i18n/language.service';
+import { FakeCatalog, provideFakeCatalog } from '../testing/fake-catalog';
+import { FakeOwnedCards, provideFakeOwnedCards } from '../testing/fake-owned-cards';
 import { App } from './app';
 import { routes } from './app.routes';
 
@@ -15,6 +17,8 @@ async function setup(signedIn: boolean) {
     providers: [
       provideRouter(routes),
       provideTestI18n(),
+      provideFakeCatalog(new FakeCatalog()),
+      provideFakeOwnedCards(new FakeOwnedCards()),
       provideFakeSupabase(createFakeSupabase(signedIn ? sessionFor() : null)),
     ],
   });

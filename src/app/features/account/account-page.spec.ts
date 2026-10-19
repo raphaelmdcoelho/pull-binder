@@ -8,6 +8,7 @@ import {
 import { provideTestI18n } from '../../../testing/transloco';
 import { AuthService } from '../../core/auth/auth.service';
 import { LanguageService } from '../../core/i18n/language.service';
+import { FakeOwnedCards, provideFakeOwnedCards } from '../../../testing/fake-owned-cards';
 import { AccountPage } from './account-page';
 
 describe('AccountPage', () => {
@@ -16,7 +17,12 @@ describe('AccountPage', () => {
     const fake = createFakeSupabase(sessionFor());
     TestBed.configureTestingModule({
       imports: [AccountPage],
-      providers: [provideRouter([]), provideTestI18n(), provideFakeSupabase(fake)],
+      providers: [
+        provideRouter([]),
+        provideTestI18n(),
+        provideFakeSupabase(fake),
+        provideFakeOwnedCards(new FakeOwnedCards()),
+      ],
     });
     await TestBed.inject(AuthService).init();
     await TestBed.inject(LanguageService).set('en');

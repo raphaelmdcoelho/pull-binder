@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { GrButton } from '@grass-ds/angular';
 import { TranslocoPipe } from '@jsverse/transloco';
@@ -7,11 +7,21 @@ import { CardImage } from '../../shared/ui/card-image/card-image';
 import { SearchField } from '../../shared/ui/search-field/search-field';
 import { Skeleton } from '../../shared/ui/skeleton/skeleton';
 import { Spinner } from '../../shared/ui/spinner/spinner';
+import { AddOwnedCardDialog } from '../collection/add/add-owned-card-dialog';
 import { SearchStore } from './search.store';
 
 @Component({
   selector: 'pb-search-page',
-  imports: [TranslocoPipe, RouterLink, GrButton, SearchField, Skeleton, Spinner, CardImage],
+  imports: [
+    TranslocoPipe,
+    RouterLink,
+    GrButton,
+    SearchField,
+    Skeleton,
+    Spinner,
+    CardImage,
+    AddOwnedCardDialog,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="gr-stack">
@@ -81,6 +91,17 @@ import { SearchStore } from './search.store';
                     <span class="pb-card-grid__name">{{ card.name }}</span>
                     <span class="gr-text-small gr-text-muted">#{{ card.number }}</span>
                   </a>
+                  <button
+                    grButton
+                    variant="secondary"
+                    type="button"
+                    [attr.aria-label]="
+                      ('add.quick' | transloco) + ': ' + card.name + ' #' + card.number
+                    "
+                    (click)="add().openFor(card.id)"
+                  >
+                    {{ 'add.quickShort' | transloco }}
+                  </button>
                 </li>
               }
             </ul>
@@ -104,10 +125,12 @@ import { SearchStore } from './search.store';
         }
       }
     </div>
+    <pb-add-owned-card-dialog />
   `,
 })
 export class SearchPage {
   protected readonly store = inject(SearchStore);
+  protected readonly add = viewChild.required(AddOwnedCardDialog);
   protected readonly placeholders = [1, 2, 3, 4, 5, 6];
   protected readonly imageUrl = (card: Parameters<typeof cardImageUrl>[0]) =>
     cardImageUrl(card, 'low');
