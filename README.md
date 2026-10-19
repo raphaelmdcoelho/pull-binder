@@ -2,7 +2,7 @@
 
 Mobile-first PWA for managing your physical Pokémon TCG cards. Vocabulary: [GLOSSARY.md](GLOSSARY.md). Plan and milestones: [docs/implementation-plan.md](docs/implementation-plan.md).
 
-Status: M0 (tooling) and M1 (shell, i18n, UI shims) are done. Login, catalog search and the collection come in later milestones.
+Status: M0 (tooling), M1 (shell, i18n, UI shims) and M2 (Supabase auth, database schema) are done. Catalog search and the collection come next.
 
 ## Develop
 
@@ -15,9 +15,17 @@ npm run lint
 npm test -- --watch=false
 npm run format:check
 npm run build        # dist/pull-binder/browser (production, with the service worker)
+npm run test:sql     # migrations + RLS tests in an in-memory Postgres (no Docker)
 ```
 
 To try the service worker locally, serve the build: `npx http-server dist/pull-binder/browser -p 8080 -c-1`.
+
+## Supabase
+
+- `supabase/migrations` holds the schema (profiles, owned_cards, enums, RLS, explicit grants, `ping()`); `supabase/tests/database` holds pgTAP tests. Nothing is applied to the hosted project automatically before M7: apply deliberately with `npx supabase link --project-ref <ref>` then `npx supabase db push`.
+- `npm run test:sql` runs the migrations and the same test file in PGlite with stubbed Supabase roles. It is a fast guard; with Docker, also run `npx supabase start && npx supabase test db`.
+- The browser talks to the project in `src/environments/environment.ts` (URL + publishable key, public by design). Never commit the `service_role` key or the Google client secret. Google is configured in the Supabase dashboard for the hosted project; for the local stack copy `supabase/.env.example` to `supabase/.env`.
+- Auth redirects: the hosted project must list `http://localhost:4200/**` (dev) and the production URL under Authentication > URL Configuration.
 
 ## Conventions
 

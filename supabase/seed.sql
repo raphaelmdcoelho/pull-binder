@@ -1,0 +1,1 @@
+-- Intentionally empty. Local users are created through the app (email confirmations are off locally).
