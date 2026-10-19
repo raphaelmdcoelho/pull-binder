@@ -34,14 +34,37 @@
     "emptyTitle": "No cards yet",
     "emptyBody": "Cards you add will show up here.",
     "findCards": "Find cards",
-    "summary": "{{entries}} entries, {{copies}} cards in total",
+    "summary": "{{entries}} different cards, {{copies}} copies in total",
     "errorTitle": "Could not load your collection",
     "errors": {
       "network": "Can't reach the server. Check your connection.",
       "unauthenticated": "Please log in again.",
       "quantity-limit": "Something went wrong.",
-      "unknown": "Something went wrong while loading."
-    }
+      "unknown": "Something went wrong while loading.",
+      "not-found": "That card is no longer in your collection."
+    },
+    "summaryFiltered": "{{entries}} different cards, {{copies}} copies match your filters",
+    "search": {
+      "label": "Search your collection",
+      "placeholder": "Card name"
+    },
+    "filters": {
+      "title": "Filters",
+      "set": "Set",
+      "any": "Any",
+      "clear": "Clear filters"
+    },
+    "sort": {
+      "label": "Sort by",
+      "updated": "Recently updated",
+      "name": "Name",
+      "set": "Set",
+      "quantity": "Quantity"
+    },
+    "filteredEmptyTitle": "No cards match",
+    "filteredEmptyBody": "None of your cards match these filters.",
+    "edit": "Edit",
+    "remove": "Remove"
   },
   "account": {
     "title": "Account",
@@ -152,5 +175,29 @@
     "zh-cn": "中文（简体）",
     "id": "Bahasa Indonesia",
     "th": "ไทย"
+  },
+  "edit": {
+    "title": "Edit card",
+    "conditionHint": "If you already own this card in that condition, the copies are combined.",
+    "save": "Save",
+    "saving": "Saving",
+    "saved": "Updated {{name}}. You now have {{total}}.",
+    "merged": "Combined with your existing {{name}}. You now have {{total}}.",
+    "errors": {
+      "quantity-limit": "You can hold at most 9999 copies of the same card.",
+      "not-found": "That card is no longer in your collection. Refresh the list.",
+      "unauthenticated": "Please log in again.",
+      "network": "Can't reach the server. Check your connection and try again.",
+      "unknown": "Could not save the change. Try again."
+    }
+  },
+  "remove": {
+    "title": "Remove from collection?",
+    "body": "This removes {{name}} (all {{count}} copies) from your collection.",
+    "permanent": "This cannot be undone. You can add the card again from Search.",
+    "cancel": "Keep it",
+    "confirm": "Remove",
+    "removing": "Removing",
+    "removed": "Removed {{name}} ({{count}} copies) from your collection."
   }
 }

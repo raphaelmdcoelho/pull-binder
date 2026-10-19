@@ -60,3 +60,71 @@ export interface AddOwnedCardInput {
   finish: Finish;
   quantity: number;
 }
+
+export type CollectionSort = 'updated' | 'name' | 'set' | 'quantity';
+export const COLLECTION_SORTS: readonly CollectionSort[] = ['updated', 'name', 'set', 'quantity'];
+
+/** What the user narrows the Collection by. `null` means "any". */
+export interface CollectionFilters {
+  text: string;
+  setId: string | null;
+  condition: Condition | null;
+  language: CardLanguage | null;
+  finish: Finish | null;
+}
+
+export interface CollectionQuery extends CollectionFilters {
+  sort: CollectionSort;
+}
+
+export const NO_FILTERS: CollectionFilters = {
+  text: '',
+  setId: null,
+  condition: null,
+  language: null,
+  finish: null,
+};
+
+export function hasActiveFilters(filters: CollectionFilters): boolean {
+  return (
+    filters.text.trim() !== '' ||
+    filters.setId !== null ||
+    filters.condition !== null ||
+    filters.language !== null ||
+    filters.finish !== null
+  );
+}
+
+export function activeFilterCount(filters: CollectionFilters): number {
+  return [filters.setId, filters.condition, filters.language, filters.finish].filter(
+    (v) => v !== null,
+  ).length;
+}
+
+export interface CollectionPage {
+  items: OwnedCard[];
+  hasMore: boolean;
+}
+
+/** Distinct Owned cards (rows) and total copies (sum of quantities). */
+export interface CollectionSummary {
+  entries: number;
+  copies: number;
+}
+
+export interface SetOption {
+  id: string;
+  name: string;
+}
+
+export interface OwnedCardUpdate {
+  quantity?: number;
+  condition?: Condition;
+}
+
+export interface UpdateResult {
+  /** The Owned card as it is now; after a merge, the one the copies were added to. */
+  card: OwnedCard;
+  /** True when the new Condition matched another Owned card and the two were combined. */
+  merged: boolean;
+}

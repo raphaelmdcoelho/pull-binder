@@ -34,14 +34,37 @@
     "emptyTitle": "Nenhuma carta ainda",
     "emptyBody": "As cartas que você adicionar aparecerão aqui.",
     "findCards": "Buscar cartas",
-    "summary": "{{entries}} itens, {{copies}} cartas no total",
+    "summary": "{{entries}} cartas diferentes, {{copies}} cópias no total",
     "errorTitle": "Não foi possível carregar sua coleção",
     "errors": {
       "network": "Não foi possível acessar o servidor. Verifique sua conexão.",
       "unauthenticated": "Entre novamente.",
       "quantity-limit": "Algo deu errado.",
-      "unknown": "Algo deu errado ao carregar."
-    }
+      "unknown": "Algo deu errado ao carregar.",
+      "not-found": "Essa carta não está mais na sua coleção."
+    },
+    "summaryFiltered": "{{entries}} cartas diferentes, {{copies}} cópias correspondem aos filtros",
+    "search": {
+      "label": "Buscar na sua coleção",
+      "placeholder": "Nome da carta"
+    },
+    "filters": {
+      "title": "Filtros",
+      "set": "Expansão",
+      "any": "Qualquer",
+      "clear": "Limpar filtros"
+    },
+    "sort": {
+      "label": "Ordenar por",
+      "updated": "Atualizadas recentemente",
+      "name": "Nome",
+      "set": "Expansão",
+      "quantity": "Quantidade"
+    },
+    "filteredEmptyTitle": "Nenhuma carta encontrada",
+    "filteredEmptyBody": "Nenhuma das suas cartas corresponde a esses filtros.",
+    "edit": "Editar",
+    "remove": "Remover"
   },
   "account": {
     "title": "Conta",
@@ -152,5 +175,29 @@
     "zh-cn": "中文（简体）",
     "id": "Bahasa Indonesia",
     "th": "ไทย"
+  },
+  "edit": {
+    "title": "Editar carta",
+    "conditionHint": "Se você já tem esta carta nessa condição, as cópias são somadas.",
+    "save": "Salvar",
+    "saving": "Salvando",
+    "saved": "{{name}} atualizada. Agora você tem {{total}}.",
+    "merged": "Somada à sua {{name}} existente. Agora você tem {{total}}.",
+    "errors": {
+      "quantity-limit": "Você pode ter no máximo 9999 cópias da mesma carta.",
+      "not-found": "Essa carta não está mais na sua coleção. Atualize a lista.",
+      "unauthenticated": "Entre novamente.",
+      "network": "Não foi possível acessar o servidor. Verifique sua conexão e tente de novo.",
+      "unknown": "Não foi possível salvar a alteração. Tente novamente."
+    }
+  },
+  "remove": {
+    "title": "Remover da coleção?",
+    "body": "Isto remove {{name}} (todas as {{count}} cópias) da sua coleção.",
+    "permanent": "Não dá para desfazer. Você pode adicionar a carta de novo pela Busca.",
+    "cancel": "Manter",
+    "confirm": "Remover",
+    "removing": "Removendo",
+    "removed": "{{name}} ({{count}} cópias) removida da sua coleção."
   }
 }

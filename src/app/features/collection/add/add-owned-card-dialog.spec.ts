@@ -5,6 +5,7 @@ import { CatalogError } from '../../../catalog/catalog.service';
 import { CollectionStore } from '../../../collection/collection.store';
 import { OwnedCardsError } from '../../../collection/owned-cards.repository';
 import { LanguageService } from '../../../core/i18n/language.service';
+import { polyfillDialog } from '../../../../testing/dialog-polyfill';
 import { FakeCatalog, provideFakeCatalog } from '../../../../testing/fake-catalog';
 import { FakeOwnedCards, provideFakeOwnedCards } from '../../../../testing/fake-owned-cards';
 import { provideTestI18n } from '../../../../testing/transloco';
@@ -31,15 +32,7 @@ class Host {
 
 async function setup() {
   localStorage.clear();
-  // jsdom has no <dialog> methods
-  HTMLDialogElement.prototype.showModal ??= function (this: HTMLDialogElement) {
-    this.setAttribute('open', '');
-  };
-  HTMLDialogElement.prototype.close ??= function (this: HTMLDialogElement, value?: string) {
-    this.removeAttribute('open');
-    this.returnValue = value ?? '';
-    this.dispatchEvent(new Event('close'));
-  };
+  polyfillDialog();
   const catalog = new FakeCatalog();
   const owned = new FakeOwnedCards();
   TestBed.configureTestingModule({
@@ -87,7 +80,7 @@ describe('AddOwnedCardDialog', () => {
     const { owned, el, open, select, submit, settle } = await setup();
     const status = TestBed.inject(StatusService);
     const store = TestBed.inject(CollectionStore);
-    await store.refresh();
+    await store.reload();
     await open(card);
     select('add-condition', 'damaged');
     select('add-language', 'ja');

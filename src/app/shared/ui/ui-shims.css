@@ -342,6 +342,37 @@
     color: var(--gr-color-text-default);
   }
 
+  /* Gap 13: filters panel (a native disclosure until grass-ds has a bottom sheet) */
+  .pb-filters {
+    padding: var(--gr-space-3) var(--gr-space-4);
+    background: var(--gr-color-surface-raised);
+    border: var(--gr-border-width) solid var(--gr-color-border-default);
+    border-radius: var(--gr-corner-md);
+  }
+  .pb-filters > summary {
+    min-block-size: 2.75rem;
+    display: flex;
+    align-items: center;
+    gap: var(--gr-space-2);
+    font-weight: var(--gr-text-weight-emphasis);
+    cursor: pointer;
+  }
+  .pb-filters > summary:focus-visible {
+    outline: var(--gr-border-focus-width) solid var(--gr-color-focus-ring);
+    outline-offset: 2px;
+  }
+  .pb-filters__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+    gap: var(--gr-space-3);
+    margin-block: var(--gr-space-3);
+  }
+  .pb-owned__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--gr-space-2);
+  }
+
   @keyframes pb-spin {
     to {
       transform: rotate(360deg);

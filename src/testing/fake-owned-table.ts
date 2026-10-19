@@ -37,11 +37,14 @@ export class FakeOwnedTable {
 }
 
 class Query implements PromiseLike<Result> {
-  private op: 'select' | 'insert' | 'update' = 'select';
+  private op: 'select' | 'insert' | 'update' | 'delete' = 'select';
   private payload: Row = {};
   private filters: [string, unknown][] = [];
+  private patterns: [string, RegExp][] = [];
+  private orders: [string, boolean][] = [];
+  private window: [number, number] | null = null;
+  private columns: string[] | null = null;
   private mode: 'many' | 'single' | 'maybe' = 'many';
-  private ordered = false;
 
   constructor(private readonly table: FakeOwnedTable) {}
 
@@ -55,8 +58,29 @@ class Query implements PromiseLike<Result> {
     this.payload = payload;
     return this;
   }
-  select(_columns?: string): this {
-    void _columns;
+  delete(): this {
+    this.op = 'delete';
+    return this;
+  }
+  select(columns?: string): this {
+    if (columns) this.columns = columns.split(',').map((c) => c.trim());
+    return this;
+  }
+  ilike(column: string, pattern: string): this {
+    // % is any run, _ any char, backslash escapes: enough for what the repository sends.
+    let source = '';
+    for (let i = 0; i < pattern.length; i++) {
+      const ch = pattern[i];
+      if (ch === '\\') source += (pattern[++i] ?? '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      else if (ch === '%') source += '.*';
+      else if (ch === '_') source += '.';
+      else source += ch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+    this.patterns.push([column, new RegExp(`^${source}$`, 'i')]);
+    return this;
+  }
+  range(from: number, to: number): this {
+    this.window = [from, to];
     return this;
   }
   match(filter: Row): this {
@@ -67,8 +91,8 @@ class Query implements PromiseLike<Result> {
     this.filters.push([column, value]);
     return this;
   }
-  order(): this {
-    this.ordered = true;
+  order(column: string, options?: { ascending?: boolean }): this {
+    this.orders.push([column, options?.ascending ?? true]);
     return this;
   }
   limit(): this {
@@ -91,7 +115,10 @@ class Query implements PromiseLike<Result> {
   }
 
   private matches(row: Row): boolean {
-    return this.filters.every(([column, value]) => row[column] === value);
+    return (
+      this.filters.every(([column, value]) => row[column] === value) &&
+      this.patterns.every(([column, pattern]) => pattern.test(String(row[column] ?? '')))
+    );
   }
 
   private shape(rows: Row[]): Result {
@@ -122,14 +149,41 @@ class Query implements PromiseLike<Result> {
       table.beforeUpdate?.();
       table.beforeUpdate = null;
       const hit = table.rows.filter((row) => this.matches(row));
-      hit.forEach((row) =>
-        Object.assign(row, this.payload, { updated_at: new Date().toISOString() }),
-      );
+      for (const row of hit) {
+        const next = { ...row, ...this.payload };
+        const clash = table.rows.some(
+          (other) => other !== row && IDENTITY.every((c) => other[c] === next[c]),
+        );
+        if (clash) return { data: null, error: { code: '23505', message: 'duplicate key value' } };
+        const quantity = next['quantity'] as number;
+        if (quantity < 1 || quantity > 9999) {
+          return { data: null, error: { code: '23514', message: 'check constraint' } };
+        }
+        Object.assign(row, this.payload, { updated_at: new Date().toISOString() });
+      }
       return this.shape(hit);
     }
-    const rows = table.rows.filter((row) => this.matches(row));
-    if (this.ordered)
-      rows.sort((a, b) => String(b['updated_at']).localeCompare(String(a['updated_at'])));
+    if (this.op === 'delete') {
+      const gone = table.rows.filter((row) => this.matches(row));
+      table.rows = table.rows.filter((row) => !gone.includes(row));
+      return this.shape(gone);
+    }
+    let rows = table.rows.filter((row) => this.matches(row));
+    rows.sort((a, b) => {
+      for (const [column, ascending] of this.orders) {
+        const x = a[column];
+        const y = b[column];
+        const cmp =
+          typeof x === 'number' && typeof y === 'number'
+            ? x - y
+            : String(x ?? '').localeCompare(String(y ?? ''));
+        if (cmp !== 0) return ascending ? cmp : -cmp;
+      }
+      return 0;
+    });
+    if (this.window) rows = rows.slice(this.window[0], this.window[1] + 1);
+    const columns = this.columns;
+    if (columns) rows = rows.map((row) => Object.fromEntries(columns.map((c) => [c, row[c]])));
     return this.shape(rows);
   }
 }
