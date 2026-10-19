@@ -1,3 +1,4 @@
+import { ConnectivityService } from '../../../core/pwa/connectivity.service';
 import { ChangeDetectionStrategy, Component, inject, signal, viewChild } from '@angular/core';
 import { GR_DIALOG, GrButton, GrDialog } from '@grass-ds/angular';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
@@ -30,6 +31,9 @@ import { StatusService } from '../../../shared/ui/status-region/status.service';
                 {{ 'finish.' + c.finish | transloco }}
               </p>
               <p class="gr-text-muted">{{ 'remove.permanent' | transloco }}</p>
+              @if (!connectivity.online()) {
+                <p class="gr-text-muted" role="status">{{ 'pwa.writeDisabled' | transloco }}</p>
+              }
               @if (error(); as code) {
                 <p role="alert" class="gr-field__error">{{ 'edit.errors.' + code | transloco }}</p>
               }
@@ -40,7 +44,12 @@ import { StatusService } from '../../../shared/ui/status-region/status.service';
               <button grButton variant="secondary" type="button" autofocus (click)="close()">
                 {{ 'remove.cancel' | transloco }}
               </button>
-              <button grButton variant="danger" type="submit" [disabled]="busy()">
+              <button
+                grButton
+                variant="danger"
+                type="submit"
+                [disabled]="busy() || !connectivity.online()"
+              >
                 {{ (busy() ? 'remove.removing' : 'remove.confirm') | transloco }}
               </button>
             </div>
@@ -52,6 +61,7 @@ import { StatusService } from '../../../shared/ui/status-region/status.service';
 })
 export class RemoveOwnedCardDialog {
   private readonly dialog = viewChild.required(GrDialog);
+  protected readonly connectivity = inject(ConnectivityService);
   private readonly store = inject(CollectionStore);
   private readonly status = inject(StatusService);
   private readonly transloco = inject(TranslocoService);

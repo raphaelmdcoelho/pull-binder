@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, ViewEncapsulation } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
 
-/** Shim for grass-ds gap 1 (app shell and top bar). Slots: default content, `[nav]` bottom bar. */
+/** Shim for grass-ds gap 1 (app shell and top bar). Slots: default content, `[banner]` under the top bar, `[nav]` bottom bar. */
 @Component({
   selector: 'pb-app-shell',
   imports: [TranslocoPipe],
@@ -13,6 +13,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
         <div class="gr-container pb-app-shell__bar">
           <p class="pb-app-shell__title">{{ 'app.name' | transloco }}</p>
         </div>
+        <ng-content select="[banner]" />
       </header>
       <main class="pb-app-shell__main">
         <div class="gr-container"><ng-content /></div>

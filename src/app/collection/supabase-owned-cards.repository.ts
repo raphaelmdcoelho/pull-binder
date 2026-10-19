@@ -285,7 +285,9 @@ export function toError(error: PostgrestError): OwnedCardsError {
   if (error.code === '42501' || error.code === 'PGRST301') {
     return new OwnedCardsError('unauthenticated', { cause: error });
   }
-  if (!error.code && /fetch|network/i.test(error.message)) {
+  // No code means the database never answered. With the service worker in the way, a dead network
+  // arrives as an empty gateway response (blank message) rather than a "Failed to fetch".
+  if (!error.code && (error.message === '' || /fetch|network/i.test(error.message))) {
     return new OwnedCardsError('network', { cause: error });
   }
   return new OwnedCardsError('unknown', { cause: error });

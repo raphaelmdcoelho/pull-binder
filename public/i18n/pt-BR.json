@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "PullBinder"
+    "name": "Pull Binder"
   },
   "nav": {
     "label": "Principal",
@@ -26,8 +26,10 @@
     "errors": {
       "network": "Não foi possível acessar o catálogo. Verifique sua conexão e tente de novo.",
       "not-found": "O catálogo não tem nada para isso.",
-      "unknown": "Algo deu errado na busca."
-    }
+      "unknown": "Algo deu errado na busca.",
+      "offline": "Você está offline e esta busca não está salva neste aparelho. Reconecte e tente de novo."
+    },
+    "offlineHint": "Você está offline. As buscas que você já fez continuam funcionando; novas precisam de conexão."
   },
   "collection": {
     "title": "Coleção",
@@ -41,7 +43,8 @@
       "unauthenticated": "Entre novamente.",
       "quantity-limit": "Algo deu errado.",
       "unknown": "Algo deu errado ao carregar.",
-      "not-found": "Essa carta não está mais na sua coleção."
+      "not-found": "Essa carta não está mais na sua coleção.",
+      "offline": "Você está offline e este aparelho ainda não tem uma cópia salva da sua coleção. Abra-a uma vez com internet."
     },
     "summaryFiltered": "{{entries}} cartas diferentes, {{copies}} cópias correspondem aos filtros",
     "search": {
@@ -64,7 +67,11 @@
     "filteredEmptyTitle": "Nenhuma carta encontrada",
     "filteredEmptyBody": "Nenhuma das suas cartas corresponde a esses filtros.",
     "edit": "Editar",
-    "remove": "Remover"
+    "remove": "Remover",
+    "offline": {
+      "savedCopy": "Mostrando sua coleção como estava salva em {{when}}.",
+      "partial": "Só as cartas pelas quais você já rolou a lista estão salvas."
+    }
   },
   "account": {
     "title": "Conta",
@@ -149,7 +156,8 @@
       "quantity-limit": "Você pode ter no máximo 9999 cópias da mesma carta.",
       "unauthenticated": "Entre novamente para adicionar cartas.",
       "network": "Não foi possível acessar o servidor. Verifique sua conexão e tente de novo.",
-      "unknown": "Não foi possível adicionar a carta. Tente novamente."
+      "unknown": "Não foi possível adicionar a carta. Tente novamente.",
+      "offline": "Você está offline. Reconecte para fazer alterações."
     }
   },
   "condition": {
@@ -188,7 +196,8 @@
       "not-found": "Essa carta não está mais na sua coleção. Atualize a lista.",
       "unauthenticated": "Entre novamente.",
       "network": "Não foi possível acessar o servidor. Verifique sua conexão e tente de novo.",
-      "unknown": "Não foi possível salvar a alteração. Tente novamente."
+      "unknown": "Não foi possível salvar a alteração. Tente novamente.",
+      "offline": "Você está offline. Reconecte para fazer alterações."
     }
   },
   "remove": {
@@ -199,5 +208,12 @@
     "confirm": "Remover",
     "removing": "Removendo",
     "removed": "{{name}} ({{count}} cópias) removida da sua coleção."
+  },
+  "pwa": {
+    "offline": "Você está offline. Ainda dá para ver sua coleção salva e as cartas que você já abriu.",
+    "updateReady": "Há uma nova versão do Pull Binder.",
+    "reload": "Recarregar",
+    "later": "Depois",
+    "writeDisabled": "Você está offline, então adicionar, editar e remover cartas fica pausado até a conexão voltar."
   }
 }

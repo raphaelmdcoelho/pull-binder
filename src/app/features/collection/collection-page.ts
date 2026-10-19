@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { GrButton } from '@grass-ds/angular';
 import { TranslocoPipe } from '@jsverse/transloco';
@@ -12,6 +12,7 @@ import {
   CollectionSort,
   Condition,
 } from '../../collection/owned-card.model';
+import { LanguageService } from '../../core/i18n/language.service';
 import { CardImage } from '../../shared/ui/card-image/card-image';
 import { SearchField } from '../../shared/ui/search-field/search-field';
 import { PbSelect } from '../../shared/ui/select/select';
@@ -40,6 +41,18 @@ const FINISHES: readonly Finish[] = ['normal', 'holo', 'reverse_holo', 'other'];
   template: `
     <div class="gr-stack">
       <h1 class="gr-display">{{ 'collection.title' | transloco }}</h1>
+
+      @if (!store.online() || store.cachedAt() !== null) {
+        <section class="gr-text-small gr-text-muted" id="collection-offline-note">
+          @if (savedAt(); as when) {
+            <p>{{ 'collection.offline.savedCopy' | transloco: { when: when } }}</p>
+            @if (store.cachedPartial()) {
+              <p>{{ 'collection.offline.partial' | transloco }}</p>
+            }
+          }
+          <p>{{ 'pwa.writeDisabled' | transloco }}</p>
+        </section>
+      }
 
       @if (store.status() === 'loaded' && !store.isEmpty()) {
         <pb-search-field
@@ -218,6 +231,10 @@ const FINISHES: readonly Finish[] = ['normal', 'holo', 'reverse_holo', 'other'];
                           grButton
                           variant="secondary"
                           type="button"
+                          [disabled]="!store.online()"
+                          [attr.aria-describedby]="
+                            store.online() ? null : 'collection-offline-note'
+                          "
                           [attr.aria-label]="
                             ('collection.edit' | transloco) + ': ' + owned.cardName
                           "
@@ -229,6 +246,10 @@ const FINISHES: readonly Finish[] = ['normal', 'holo', 'reverse_holo', 'other'];
                           grButton
                           variant="secondary"
                           type="button"
+                          [disabled]="!store.online()"
+                          [attr.aria-describedby]="
+                            store.online() ? null : 'collection-offline-note'
+                          "
                           [attr.aria-label]="
                             ('collection.remove' | transloco) + ': ' + owned.cardName
                           "
@@ -276,6 +297,17 @@ const FINISHES: readonly Finish[] = ['normal', 'holo', 'reverse_holo', 'other'];
 })
 export class CollectionPage {
   protected readonly store = inject(CollectionStore);
+  private readonly language = inject(LanguageService);
+  /** When the copy on screen was saved, in the app language; null while the data is live. */
+  protected readonly savedAt = computed(() => {
+    const at = this.store.cachedAt();
+    return at === null
+      ? null
+      : new Intl.DateTimeFormat(this.language.current(), {
+          dateStyle: 'medium',
+          timeStyle: 'short',
+        }).format(at);
+  });
   protected readonly edit = viewChild.required(EditOwnedCardDialog);
   protected readonly remove = viewChild.required(RemoveOwnedCardDialog);
 

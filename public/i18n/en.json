@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "PullBinder"
+    "name": "Pull Binder"
   },
   "nav": {
     "label": "Main",
@@ -26,8 +26,10 @@
     "errors": {
       "network": "Can't reach the catalog. Check your connection and try again.",
       "not-found": "The catalog has nothing for that.",
-      "unknown": "Something went wrong while searching."
-    }
+      "unknown": "Something went wrong while searching.",
+      "offline": "You're offline and this search isn't saved on this device. Reconnect and try again."
+    },
+    "offlineHint": "You're offline. Searches you've already made still work; new ones need a connection."
   },
   "collection": {
     "title": "Collection",
@@ -41,7 +43,8 @@
       "unauthenticated": "Please log in again.",
       "quantity-limit": "Something went wrong.",
       "unknown": "Something went wrong while loading.",
-      "not-found": "That card is no longer in your collection."
+      "not-found": "That card is no longer in your collection.",
+      "offline": "You're offline and this device has no saved copy of your collection yet. Open it once while online."
     },
     "summaryFiltered": "{{entries}} different cards, {{copies}} copies match your filters",
     "search": {
@@ -64,7 +67,11 @@
     "filteredEmptyTitle": "No cards match",
     "filteredEmptyBody": "None of your cards match these filters.",
     "edit": "Edit",
-    "remove": "Remove"
+    "remove": "Remove",
+    "offline": {
+      "savedCopy": "Showing your collection as saved on {{when}}.",
+      "partial": "Only the cards you had scrolled through are saved."
+    }
   },
   "account": {
     "title": "Account",
@@ -149,7 +156,8 @@
       "quantity-limit": "You can hold at most 9999 copies of the same card.",
       "unauthenticated": "Please log in again to add cards.",
       "network": "Can't reach the server. Check your connection and try again.",
-      "unknown": "Could not add the card. Try again."
+      "unknown": "Could not add the card. Try again.",
+      "offline": "You're offline. Reconnect to make changes."
     }
   },
   "condition": {
@@ -188,7 +196,8 @@
       "not-found": "That card is no longer in your collection. Refresh the list.",
       "unauthenticated": "Please log in again.",
       "network": "Can't reach the server. Check your connection and try again.",
-      "unknown": "Could not save the change. Try again."
+      "unknown": "Could not save the change. Try again.",
+      "offline": "You're offline. Reconnect to make changes."
     }
   },
   "remove": {
@@ -199,5 +208,12 @@
     "confirm": "Remove",
     "removing": "Removing",
     "removed": "Removed {{name}} ({{count}} copies) from your collection."
+  },
+  "pwa": {
+    "offline": "You're offline. You can still browse your saved collection and cards you've already looked at.",
+    "updateReady": "A new version of Pull Binder is ready.",
+    "reload": "Reload",
+    "later": "Later",
+    "writeDisabled": "You're offline, so adding, editing and removing cards are paused until you reconnect."
   }
 }

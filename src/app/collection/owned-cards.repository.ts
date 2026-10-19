@@ -10,7 +10,7 @@ import {
 } from './owned-card.model';
 
 export type OwnedCardsErrorCode =
-  'quantity-limit' | 'not-found' | 'unauthenticated' | 'network' | 'unknown';
+  'quantity-limit' | 'not-found' | 'unauthenticated' | 'network' | 'offline' | 'unknown';
 
 export class OwnedCardsError extends Error {
   constructor(

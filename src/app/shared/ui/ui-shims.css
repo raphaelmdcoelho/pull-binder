@@ -40,6 +40,40 @@
       max(var(--gr-layout-gutter), env(safe-area-inset-right));
   }
 
+  /* Gap 7 (Toast), app-wide notices under the top bar: offline and update ready */
+  .pb-banner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--gr-space-2);
+    margin: 0;
+    padding-block: var(--gr-space-2);
+    color: var(--gr-color-feedback-warning-text);
+    font-size: var(--gr-text-size-small);
+  }
+  .pb-banner[data-kind='update'] {
+    color: var(--gr-color-feedback-info-text);
+  }
+  .pb-banner__actions {
+    display: flex;
+    gap: var(--gr-space-2);
+  }
+  .pb-banner__button {
+    min-block-size: 2.75rem;
+    padding-inline: var(--gr-space-2);
+    color: inherit;
+    font: inherit;
+    font-weight: var(--gr-text-weight-emphasis);
+    text-decoration: underline;
+    background: none;
+    border: 0;
+    cursor: pointer;
+  }
+  .pb-banner__button:focus-visible {
+    outline: var(--gr-border-focus-width) solid var(--gr-color-focus-ring);
+  }
+
   /* Gap 2: bottom tab bar */
   .pb-tab-bar {
     position: sticky;

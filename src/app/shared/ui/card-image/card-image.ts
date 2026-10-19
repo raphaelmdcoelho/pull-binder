@@ -29,6 +29,7 @@ import { Skeleton } from '../skeleton/skeleton';
         [alt]="alt()"
         [attr.loading]="eager() ? 'eager' : 'lazy'"
         decoding="async"
+        crossorigin="anonymous"
         width="63"
         height="88"
         (load)="loaded.set(true)"

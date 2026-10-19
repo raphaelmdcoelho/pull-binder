@@ -126,7 +126,10 @@ export function toCatalogError(error: unknown): CatalogError {
   if (error instanceof CatalogError) return error;
   if (error instanceof TimeoutError) return new CatalogError('network', { cause: error });
   if (error instanceof HttpErrorResponse) {
-    if (error.status === 0) return new CatalogError('network', { cause: error });
+    // 0 is a failed fetch; 502-504 is what the service worker answers when the network is down.
+    if ([0, 502, 503, 504].includes(error.status)) {
+      return new CatalogError('network', { cause: error });
+    }
     if (error.status === 404) return new CatalogError('not-found', { cause: error });
   }
   return new CatalogError('unknown', { cause: error });

@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, viewChild } from '@angular/core';
+import { ConnectivityService } from '../../core/pwa/connectivity.service';
 import { RouterLink } from '@angular/router';
 import { GrButton } from '@grass-ds/angular';
 import { TranslocoPipe } from '@jsverse/transloco';
@@ -35,6 +36,10 @@ import { SearchStore } from './search.store';
         (searched)="store.search($event)"
       />
 
+      @if (!connectivity.online()) {
+        <p class="gr-text-small gr-text-muted">{{ 'search.offlineHint' | transloco }}</p>
+      }
+
       @switch (store.status()) {
         @case ('idle') {
           <p class="gr-text-muted">
@@ -56,7 +61,12 @@ import { SearchStore } from './search.store';
                 {{ 'search.errorTitle' | transloco }}
               </h2>
               <p role="alert">
-                {{ 'search.errors.' + (store.error()?.code ?? 'unknown') | transloco }}
+                {{
+                  (!connectivity.online() && store.error()?.code === 'network'
+                    ? 'search.errors.offline'
+                    : 'search.errors.' + (store.error()?.code ?? 'unknown')
+                  ) | transloco
+                }}
               </p>
               <button grButton type="button" (click)="store.retry()">
                 {{ 'search.retry' | transloco }}
@@ -95,6 +105,7 @@ import { SearchStore } from './search.store';
                     grButton
                     variant="secondary"
                     type="button"
+                    [disabled]="!connectivity.online()"
                     [attr.aria-label]="
                       ('add.quick' | transloco) + ': ' + card.name + ' #' + card.number
                     "
@@ -130,6 +141,7 @@ import { SearchStore } from './search.store';
 })
 export class SearchPage {
   protected readonly store = inject(SearchStore);
+  protected readonly connectivity = inject(ConnectivityService);
   protected readonly add = viewChild.required(AddOwnedCardDialog);
   protected readonly placeholders = [1, 2, 3, 4, 5, 6];
   protected readonly imageUrl = (card: Parameters<typeof cardImageUrl>[0]) =>
