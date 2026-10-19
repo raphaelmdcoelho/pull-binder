@@ -49,8 +49,20 @@ jobs:
       - name: Validate SQL migrations and RLS tests (PGlite)
         run: npm run test:sql
       - run: npm run build
+      - name: Install Chromium for the smoke test
+        run: npx playwright install --with-deps chromium
+      - name: Smoke test the production build (Supabase and TCGdex are mocked)
+        run: npm run e2e
       - uses: actions/upload-artifact@v7
         with:
           name: dist
           path: dist/pull-binder/browser
+          retention-days: 7
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            playwright-report
+            test-results
           retention-days: 7

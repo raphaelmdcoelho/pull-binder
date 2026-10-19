@@ -1,0 +1,155 @@
+# Push to main: semantic-release decides from the Conventional Commits whether there is something
+# to release. If there is, it tags vX.Y.Z and publishes the GitHub Release, then (in this same
+# workflow, because tags created with GITHUB_TOKEN do not trigger other workflows) applies new
+# database migrations after a manual approval and deploys that tag to Cloudflare Pages.
+# A push with no releasable commit (docs, chore, ci, test, ...) ends after the first job:
+# nothing is tagged and nothing is deployed.
+name: Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      redeploy:
+        description: Skip semantic-release and deploy the latest tag again (e.g. after fixing a Cloudflare secret)
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    outputs:
+      published: ${{ steps.result.outputs.published }}
+      version: ${{ steps.result.outputs.version }}
+      migrations: ${{ steps.result.outputs.migrations }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Run semantic-release
+        id: semrel
+        if: ${{ !inputs.redeploy }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx semantic-release
+      - name: Decide what the later jobs do
+        id: result
+        env:
+          PUBLISHED: ${{ steps.semrel.outputs.published }}
+          VERSION: ${{ steps.semrel.outputs.version }}
+          REDEPLOY: ${{ inputs.redeploy }}
+        run: |
+          set -euo pipefail
+          if [ "$REDEPLOY" = "true" ]; then
+            tag=$(git describe --tags --abbrev=0 --match 'v*')
+            echo "published=true" >> "$GITHUB_OUTPUT"
+            echo "version=${tag#v}" >> "$GITHUB_OUTPUT"
+            echo "migrations=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ "$PUBLISHED" != "true" ]; then
+            echo "published=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=No release::No releasable commit since the last tag, so nothing is deployed."
+            exit 0
+          fi
+          echo "published=true" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          # Does this release add or change files under supabase/migrations since the previous tag?
+          # The first release has no previous tag: treat it as having migrations (the approval is
+          # cheap and `db push` is a no-op when the hosted history already matches).
+          previous=$(git describe --tags --abbrev=0 --match 'v*' "v$VERSION^" 2>/dev/null || true)
+          if [ -z "$previous" ]; then
+            migrations=true
+          elif [ -n "$(git diff --name-only --diff-filter=ACMR "$previous" "v$VERSION" -- supabase/migrations)" ]; then
+            migrations=true
+          else
+            migrations=false
+          fi
+          echo "migrations=$migrations" >> "$GITHUB_OUTPUT"
+          echo "::notice title=Released v$VERSION::migrations=$migrations (previous tag: ${previous:-none})"
+
+  migrate:
+    name: Apply database migrations
+    needs: release
+    if: needs.release.outputs.published == 'true' && needs.release.outputs.migrations == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Required reviewers on this environment are the approval gate.
+    environment: production-db
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: v${{ needs.release.outputs.version }}
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.121.0
+      - name: Check configuration
+        run: |
+          for name in SUPABASE_ACCESS_TOKEN SUPABASE_DB_PASSWORD SUPABASE_PROJECT_REF; do
+            if [ -z "${!name}" ]; then echo "::error title=Missing configuration::$name is not set"; exit 1; fi
+          done
+      - name: Link the project
+        run: supabase link --project-ref "$SUPABASE_PROJECT_REF"
+      - name: Show local and remote migration history
+        run: supabase migration list
+      - name: Dry run
+        run: |
+          if ! supabase db push --dry-run; then
+            echo "::error title=Migration history mismatch::The hosted history and supabase/migrations disagree. See 'One-time migration history alignment' in docs/implementation-plan.md."
+            exit 1
+          fi
+      - name: Apply pending migrations
+        run: supabase db push
+
+  deploy:
+    name: Deploy to Cloudflare Pages
+    needs: [release, migrate]
+    # `migrate` is skipped for releases without migrations; a failed or cancelled one blocks deploy.
+    if: >-
+      always() && needs.release.outputs.published == 'true'
+      && needs.migrate.result != 'failure' && needs.migrate.result != 'cancelled'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: production
+      url: https://${{ vars.CLOUDFLARE_PROJECT_NAME }}.pages.dev
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: v${{ needs.release.outputs.version }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Stamp the version into the build
+        run: node scripts/stamp-version.mjs "${{ needs.release.outputs.version }}" "$(git rev-parse HEAD)"
+      - run: npm run build
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: '4'
+          command: pages deploy dist/pull-binder/browser --project-name=${{ vars.CLOUDFLARE_PROJECT_NAME }} --branch=main
