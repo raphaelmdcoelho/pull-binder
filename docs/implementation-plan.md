@@ -280,3 +280,23 @@ If branch protection blocks semantic-release's `git` plugin commit (CHANGELOG/pa
 - The Collection page lists Owned cards newest first (up to 1000, no filters yet). The store reloads after an add and is cleared on sign-out.
 - Verified on the local stack with Docker: real pgTAP 18/18 and `scripts/verify-local-rls.mjs` 15/15 (two real users, conflicts, compare-and-swap, cross-user isolation, anon).
 - Missing grass-ds components used as shims: Toast (gap 7), Stepper (gap 11), Image/card grid (gap 9). Still missing and worked around with plain markup: Badge/Chip (gap 8, condition/language/finish shown as a text list), Empty state (gap 6), Select hint/error styling.
+
+## 13. Interim deploy to Cloudflare Pages (2026-10-19)
+
+Files: `public/_headers` (hashed JS/CSS immutable; `index.html`, `ngsw.json`, the service worker files, the manifest and `i18n/*` always revalidate; a few safe default headers), `public/_redirects` (`/* /index.html 200`, so deep links and the OAuth return URL load the SPA) and `.github/workflows/deploy.yml`.
+
+`deploy.yml` runs on every push to `main` (and by hand). It first checks that `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_PROJECT_NAME` are set. If any is missing it prints a notice and ends green without building. Otherwise it runs `npm ci && npm run build` and `cloudflare/wrangler-action@v3` with `pages deploy dist/pull-binder/browser --branch=main`. It has no access to Supabase secrets; the app config only contains public values.
+
+Compatibility with M7: the same three steps become the `deploy` job of `release.yml` (running after the release and the gated migration job, on the tag). When that lands, delete `deploy.yml` so a push does not deploy twice. The secret and variable names stay the same.
+
+What the user must configure (once):
+
+1. **Cloudflare project.** Dashboard, Workers & Pages, Create, Pages, "Upload assets" (Direct Upload, not Git). Name it, for example `pull-binder` (the URL is `https://<name>.pages.dev`), upload any small file to create it. The workflow replaces it on its first run. (CLI alternative: `npx wrangler pages project create pull-binder --production-branch main`.)
+2. **API token.** My Profile, API Tokens, Create Token, Custom token: permission _Account, Cloudflare Pages, Edit_, account resources limited to your account. Nothing else.
+3. **Account ID.** Shown on the right of the Workers & Pages overview (or in the dashboard URL).
+4. **GitHub.** Repository Settings, Secrets and variables, Actions: secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`; variable `CLOUDFLARE_PROJECT_NAME` (the project name from step 1).
+5. **Run it.** Push to `main` or use Actions, Deploy, Run workflow. The first green run publishes to `https://<name>.pages.dev`.
+6. **Supabase.** Authentication, URL Configuration: add `https://<name>.pages.dev/**` to Redirect URLs (and make it the Site URL once it is the main address). Without this, e-mail confirmation links and Google sign-in return to the wrong place.
+7. **Google OAuth client.** Google Cloud Console, APIs & Services, Credentials, your Web client: add `https://<name>.pages.dev` to Authorised JavaScript origins. The authorised redirect URI stays `https://cfqqwlggqybyjhtkkiha.supabase.co/auth/v1/callback`.
+
+Notes: only production (`--branch=main`) deploys use the project URL; Cloudflare also gives each deploy a unique `https://<hash>.<name>.pages.dev` address that is not in the Supabase or Google lists, so sign-in only works on the main URL. A custom domain, when added, needs the same two entries.
