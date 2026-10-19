@@ -82,7 +82,8 @@
       "pt-BR": "Português (Brasil)"
     },
     "email": "E-mail",
-    "name": "Nome"
+    "name": "Nome",
+    "version": "Versão {{version}}"
   },
   "ui": {
     "loading": "Carregando",
