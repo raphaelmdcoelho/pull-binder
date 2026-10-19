@@ -139,6 +139,17 @@ describe('TcgdexCatalogService', () => {
     await expect(result).rejects.toBeInstanceOf(CatalogError);
   });
 
+  it('treats the 504 the service worker answers for a dead network as a network error', async () => {
+    const { service, http } = setup();
+    const result = service.searchCards({ query: 'pika', lang: 'en', page: 1 });
+    await vi.waitFor(() =>
+      http
+        .expectOne((r) => r.url === `${API}/en/cards`)
+        .flush('', { status: 504, statusText: 'Gateway Timeout' }),
+    );
+    await expect(result).rejects.toMatchObject({ code: 'network' });
+  });
+
   it('maps a card with its set, rarity and finishes', async () => {
     const { service, http } = setup();
     const result = service.getCard('base1-4', 'en');

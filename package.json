@@ -12,7 +12,8 @@
     "format:check": "prettier --check .",
     "build:ci": "ng build",
     "prepare": "husky",
-    "test:sql": "node scripts/validate-sql.mjs"
+    "test:sql": "node scripts/validate-sql.mjs",
+    "icons": "node scripts/generate-icons.mjs"
   },
   "private": true,
   "dependencies": {
@@ -39,6 +40,7 @@
     "@commitlint/cli": "^21.2.4",
     "@commitlint/config-conventional": "^21.2.4",
     "@electric-sql/pglite": "^0.5.10",
+    "@resvg/resvg-js": "^2.6.2",
     "@semantic-release/exec": "^7.1.0",
     "angular-eslint": "^22.6.0",
     "eslint": "^10.13.0",

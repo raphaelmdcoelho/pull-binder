@@ -265,6 +265,7 @@ describe('SupabaseOwnedCardsRepository', () => {
     table.failWith = { code: '42501', message: 'rls' };
     await expect(repo.add(input())).rejects.toMatchObject({ code: 'unauthenticated' });
     expect(toError(pgError('', 'TypeError: Failed to fetch')).code).toBe('network');
+    expect(toError(pgError('', '')).code).toBe('network');
     expect(toError(pgError('23514', 'x')).code).toBe('quantity-limit');
     expect(toError(pgError('XX000', 'x')).code).toBe('unknown');
   });

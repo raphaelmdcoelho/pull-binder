@@ -8,6 +8,7 @@ import { LanguageService } from '../../../core/i18n/language.service';
 import { polyfillDialog } from '../../../../testing/dialog-polyfill';
 import { FakeCatalog, provideFakeCatalog } from '../../../../testing/fake-catalog';
 import { FakeOwnedCards, provideFakeOwnedCards } from '../../../../testing/fake-owned-cards';
+import { FakeConnectivity, provideFakeConnectivity } from '../../../../testing/fake-pwa';
 import { provideTestI18n } from '../../../../testing/transloco';
 import { StatusService } from '../../../shared/ui/status-region/status.service';
 import { AddOwnedCardDialog } from './add-owned-card-dialog';
@@ -35,9 +36,15 @@ async function setup() {
   polyfillDialog();
   const catalog = new FakeCatalog();
   const owned = new FakeOwnedCards();
+  const connectivity = new FakeConnectivity();
   TestBed.configureTestingModule({
     imports: [Host],
-    providers: [provideTestI18n(), provideFakeCatalog(catalog), provideFakeOwnedCards(owned)],
+    providers: [
+      provideTestI18n(),
+      provideFakeCatalog(catalog),
+      provideFakeOwnedCards(owned),
+      provideFakeConnectivity(connectivity),
+    ],
   });
   await TestBed.inject(LanguageService).set('en');
   const fixture = TestBed.createComponent(Host);
@@ -61,10 +68,22 @@ async function setup() {
     el.querySelector('form')!.dispatchEvent(new Event('submit', { cancelable: true }));
     await settle();
   };
-  return { catalog, owned, fixture, el, open, settle, select, submit };
+  return { catalog, owned, connectivity, fixture, el, open, settle, select, submit };
 }
 
 describe('AddOwnedCardDialog', () => {
+  it('disables Add with an explanation while offline, and never calls the server', async () => {
+    const { owned, connectivity, el, open, settle, submit } = await setup();
+    await open(card);
+    connectivity.set(false);
+    await settle();
+    expect(el.querySelector<HTMLButtonElement>('button[type="submit"]')!.disabled).toBe(true);
+    expect(el.textContent).toContain('adding, editing and removing cards are paused');
+    await submit();
+    expect(owned.added).toHaveLength(0);
+    expect(el.querySelector('[role="alert"]')?.textContent).toContain('Reconnect to make changes');
+  });
+
   it('defaults the language to the card language and offers only the finishes the Card has', async () => {
     const { el, open } = await setup();
     await open(card);

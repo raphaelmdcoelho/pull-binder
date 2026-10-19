@@ -8,9 +8,13 @@
       "resources": {
         "files": [
           "/favicon.ico",
+          "/favicon.svg",
           "/index.csr.html",
           "/index.html",
           "/manifest.webmanifest",
+          "/i18n/*.json",
+          "/icons/*.png",
+          "/media/*.woff2",
           "/*.css",
           "/*.js"
         ]
@@ -22,6 +26,29 @@
       "updateMode": "prefetch",
       "resources": {
         "files": ["/**/*.(svg|cur|jpg|jpeg|png|apng|webp|avif|gif|otf|ttf|woff|woff2)"]
+      }
+    }
+  ],
+  "dataGroups": [
+    {
+      "name": "tcgdex-api",
+      "urls": ["https://api.tcgdex.net/v2/**"],
+      "cacheConfig": {
+        "strategy": "freshness",
+        "maxSize": 200,
+        "maxAge": "7d",
+        "timeout": "4s",
+        "cacheOpaqueResponses": false
+      }
+    },
+    {
+      "name": "tcgdex-images",
+      "urls": ["https://assets.tcgdex.net/**"],
+      "cacheConfig": {
+        "strategy": "performance",
+        "maxSize": 600,
+        "maxAge": "30d",
+        "cacheOpaqueResponses": false
       }
     }
   ]

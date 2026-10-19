@@ -1,3 +1,4 @@
+import { ConnectivityService } from '../../../core/pwa/connectivity.service';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -71,6 +72,9 @@ import { StatusService } from '../../../shared/ui/status-region/status.service';
                 </select>
               </div>
 
+              @if (!connectivity.online()) {
+                <p class="gr-text-muted" role="status">{{ 'pwa.writeDisabled' | transloco }}</p>
+              }
               @if (error(); as code) {
                 <p role="alert" class="gr-field__error">{{ 'edit.errors.' + code | transloco }}</p>
               }
@@ -79,7 +83,11 @@ import { StatusService } from '../../../shared/ui/status-region/status.service';
               <button grButton variant="secondary" type="button" (click)="close()">
                 {{ 'add.cancel' | transloco }}
               </button>
-              <button grButton type="submit" [disabled]="!changed() || busy()">
+              <button
+                grButton
+                type="submit"
+                [disabled]="!changed() || busy() || !connectivity.online()"
+              >
                 {{ (busy() ? 'edit.saving' : 'edit.save') | transloco }}
               </button>
             </div>
@@ -91,6 +99,7 @@ import { StatusService } from '../../../shared/ui/status-region/status.service';
 })
 export class EditOwnedCardDialog {
   private readonly dialog = viewChild.required(GrDialog);
+  protected readonly connectivity = inject(ConnectivityService);
   private readonly store = inject(CollectionStore);
   private readonly status = inject(StatusService);
   private readonly transloco = inject(TranslocoService);

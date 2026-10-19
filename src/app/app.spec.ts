@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
+import { provideServiceWorker } from '@angular/service-worker';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { createFakeSupabase, provideFakeSupabase, sessionFor } from '../testing/fake-supabase';
 import { provideTestI18n } from '../testing/transloco';
@@ -16,6 +17,7 @@ async function setup(signedIn: boolean) {
     imports: [App],
     providers: [
       provideRouter(routes),
+      provideServiceWorker('ngsw-worker.js', { enabled: false }),
       provideTestI18n(),
       provideFakeCatalog(new FakeCatalog()),
       provideFakeOwnedCards(new FakeOwnedCards()),

@@ -1,3 +1,4 @@
+import { ConnectivityService } from '../../../core/pwa/connectivity.service';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -123,6 +124,9 @@ type Phase = 'loading' | 'ready' | 'load-error';
                     </select>
                   </div>
 
+                  @if (!connectivity.online()) {
+                    <p class="gr-text-muted" role="status">{{ 'pwa.writeDisabled' | transloco }}</p>
+                  }
                   @if (error(); as code) {
                     <p role="alert" class="gr-field__error">
                       {{ 'add.errors.' + code | transloco }}
@@ -136,7 +140,11 @@ type Phase = 'loading' | 'ready' | 'load-error';
             <button grButton variant="secondary" type="button" (click)="close()">
               {{ 'add.cancel' | transloco }}
             </button>
-            <button grButton type="submit" [disabled]="phase() !== 'ready' || busy()">
+            <button
+              grButton
+              type="submit"
+              [disabled]="phase() !== 'ready' || busy() || !connectivity.online()"
+            >
               {{ (busy() ? 'add.adding' : 'add.submit') | transloco }}
             </button>
           </div>
@@ -147,6 +155,7 @@ type Phase = 'loading' | 'ready' | 'load-error';
 })
 export class AddOwnedCardDialog {
   private readonly dialog = viewChild.required(GrDialog);
+  protected readonly connectivity = inject(ConnectivityService);
   private readonly catalog = inject(CatalogService);
   private readonly repository = inject(OwnedCardsRepository);
   private readonly collection = inject(CollectionStore);
@@ -205,6 +214,7 @@ export class AddOwnedCardDialog {
     const card = this.card();
     if (!card || this.busy()) return;
     if (!this.valid()) return void this.error.set('quantity-limit');
+    if (!this.connectivity.online()) return void this.error.set('offline');
     this.busy.set(true);
     this.error.set(null);
     try {

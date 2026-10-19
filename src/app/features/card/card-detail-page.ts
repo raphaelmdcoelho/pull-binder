@@ -12,6 +12,7 @@ import { GrButton } from '@grass-ds/angular';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { Card, cardImageUrl } from '../../catalog/card.model';
 import { CatalogError, CatalogService, toCatalogLang } from '../../catalog/catalog.service';
+import { ConnectivityService } from '../../core/pwa/connectivity.service';
 import { LanguageService } from '../../core/i18n/language.service';
 import { CardImage } from '../../shared/ui/card-image/card-image';
 import { Spinner } from '../../shared/ui/spinner/spinner';
@@ -29,9 +30,20 @@ import { AddOwnedCardDialog } from '../collection/add/add-owned-card-dialog';
       } @else if (card(); as c) {
         <h1 class="gr-display">{{ c.name }}</h1>
         <pb-card-image [src]="image(c)" [alt]="c.name + ' ' + c.number" [eager]="true" />
-        <button grButton type="button" (click)="add().openFor(c)">
+        <button
+          grButton
+          type="button"
+          [disabled]="!connectivity.online()"
+          [attr.aria-describedby]="connectivity.online() ? null : 'card-offline-note'"
+          (click)="add().openFor(c)"
+        >
           {{ 'add.open' | transloco }}
         </button>
+        @if (!connectivity.online()) {
+          <p class="gr-text-small gr-text-muted" id="card-offline-note">
+            {{ 'pwa.writeDisabled' | transloco }}
+          </p>
+        }
         <dl class="gr-stack">
           <div>
             <dt class="gr-text-muted">{{ 'card.set' | transloco }}</dt>
@@ -60,6 +72,7 @@ import { AddOwnedCardDialog } from '../collection/add/add-owned-card-dialog';
   `,
 })
 export class CardDetailPage {
+  protected readonly connectivity = inject(ConnectivityService);
   private readonly catalog = inject(CatalogService);
   private readonly language = inject(LanguageService);
 

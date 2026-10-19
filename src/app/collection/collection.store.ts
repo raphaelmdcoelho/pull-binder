@@ -1,5 +1,9 @@
-import { Injectable, computed, inject, signal } from '@angular/core';
+import { Injectable, computed, effect, inject, signal, untracked } from '@angular/core';
 import { Finish } from '../catalog/card.model';
+import { AuthService } from '../core/auth/auth.service';
+import { ConnectivityService } from '../core/pwa/connectivity.service';
+import { CollectionSnapshots } from './collection-snapshot';
+import { applyCollectionQuery, summarizeCards } from './collection-query';
 import {
   CardLanguage,
   CollectionFilters,
@@ -35,6 +39,9 @@ function asError(error: unknown): OwnedCardsError {
 @Injectable({ providedIn: 'root' })
 export class CollectionStore {
   private readonly repository = inject(OwnedCardsRepository);
+  private readonly connectivity = inject(ConnectivityService);
+  private readonly snapshots = inject(CollectionSnapshots);
+  private readonly auth = inject(AuthService);
 
   private readonly _filters = signal<CollectionFilters>({ ...NO_FILTERS });
   private readonly _sort = signal<CollectionSort>('updated');
@@ -47,6 +54,8 @@ export class CollectionStore {
   private readonly _hasMore = signal(false);
   private readonly _summary = signal<CollectionSummary | null>(null);
   private readonly _sets = signal<SetOption[]>([]);
+  private readonly _cachedAt = signal<number | null>(null);
+  private readonly _cachedPartial = signal(false);
 
   readonly filters = this._filters.asReadonly();
   readonly sort = this._sort.asReadonly();
@@ -60,6 +69,11 @@ export class CollectionStore {
   readonly hasMore = this._hasMore.asReadonly();
   readonly summary = this._summary.asReadonly();
   readonly sets = this._sets.asReadonly();
+  readonly online = this.connectivity.online;
+  /** Epoch ms of the saved copy being shown instead of live data, or null when the data is live. */
+  readonly cachedAt = this._cachedAt.asReadonly();
+  /** The saved copy holds only part of the Collection (the user had not scrolled through it all). */
+  readonly cachedPartial = this._cachedPartial.asReadonly();
 
   readonly filtersActive = computed(() => hasActiveFilters(this._filters()));
   readonly activeFilterCount = computed(() => activeFilterCount(this._filters()));
@@ -74,6 +88,27 @@ export class CollectionStore {
 
   private stale = true;
   private requestId = 0;
+
+  constructor() {
+    let lastUserId: string | null | undefined;
+    effect(() => {
+      const userId = this.auth.user()?.id ?? null;
+      untracked(() => {
+        if (lastUserId !== undefined && userId !== lastUserId) {
+          this.reset();
+          // Signing out (or switching account) must not leave the previous Collection on the device.
+          if (userId === null) void this.snapshots.clear();
+        }
+        lastUserId = userId;
+      });
+    });
+    // Back online while showing a saved copy: fetch the live Collection.
+    effect(() => {
+      if (this.connectivity.online() && untracked(() => this._cachedAt() !== null)) {
+        untracked(() => void this.reload());
+      }
+    });
+  }
 
   private query(): CollectionQuery {
     return { ...this._filters(), sort: this._sort() };
@@ -94,6 +129,10 @@ export class CollectionStore {
     this._error.set(null);
     this._loadMoreError.set(null);
     this._loadingMore.set(false);
+    if (!this.connectivity.online()) {
+      await this.showSavedCopy(id, query, new OwnedCardsError('offline'));
+      return;
+    }
     try {
       const [page, summary, sets] = await Promise.all([
         this.repository.list(query, { offset: 0, limit: PAGE_SIZE }),
@@ -105,12 +144,20 @@ export class CollectionStore {
       this._hasMore.set(page.hasMore);
       this._summary.set(summary);
       this._sets.set(sets);
+      this._cachedAt.set(null);
+      this._cachedPartial.set(false);
       this._status.set('loaded');
       this._refreshing.set(false);
       this.stale = false;
+      void this.persist();
     } catch (error) {
       if (id !== this.requestId) return;
-      this._error.set(asError(error));
+      const failure = asError(error);
+      if (failure.code === 'network') {
+        await this.showSavedCopy(id, query, failure);
+        return;
+      }
+      this._error.set(failure);
       this._refreshing.set(false);
       this._status.set('error');
     }
@@ -132,6 +179,7 @@ export class CollectionStore {
         ...page.items.filter((c) => !cards.some((o) => o.id === c.id)),
       ]);
       this._hasMore.set(page.hasMore);
+      void this.persist();
     } catch (error) {
       if (id !== this.requestId) return;
       this._loadMoreError.set(asError(error));
@@ -173,6 +221,7 @@ export class CollectionStore {
    * the edited row and updates the one that absorbed it. Throws the typed error to the caller.
    */
   async update(card: OwnedCard, patch: OwnedCardUpdate): Promise<UpdateResult> {
+    this.assertOnline();
     const result = await this.repository.update(card.id, patch);
     this._cards.update((cards) =>
       result.merged
@@ -186,6 +235,7 @@ export class CollectionStore {
   }
 
   async remove(card: OwnedCard): Promise<void> {
+    this.assertOnline();
     try {
       await this.repository.remove(card.id);
     } catch (error) {
@@ -200,6 +250,12 @@ export class CollectionStore {
   /** Called after an add so the next visit to the Collection reloads. */
   markStale(): void {
     this.stale = true;
+    void this.refreshSnapshot();
+  }
+
+  /** Writes need the server (offline writes are not supported yet). */
+  assertOnline(): void {
+    if (!this.connectivity.online()) throw new OwnedCardsError('offline');
   }
 
   /** Forget everything (sign-out), including filters. */
@@ -211,6 +267,8 @@ export class CollectionStore {
     this._summary.set(null);
     this._sets.set([]);
     this._hasMore.set(false);
+    this._cachedAt.set(null);
+    this._cachedPartial.set(false);
     this._status.set('idle');
     this._refreshing.set(false);
     this._error.set(null);
@@ -231,6 +289,10 @@ export class CollectionStore {
     } catch {
       // The numbers are cosmetic; the next reload corrects them.
     }
+    if (id !== this.requestId) return;
+    // A write done while filtered changed rows the saved copy still holds; rebuild it.
+    if (this.isDefaultView()) await this.persist();
+    else await this.refreshSnapshot();
   }
 
   private async refreshSets(): Promise<void> {
@@ -239,5 +301,75 @@ export class CollectionStore {
     } catch {
       // Keep the options we have.
     }
+  }
+
+  private isDefaultView(): boolean {
+    return !this.filtersActive() && this._sort() === 'updated';
+  }
+
+  /** Keeps the unfiltered view on the device so it can be opened offline. */
+  private async persist(): Promise<void> {
+    const userId = this.auth.user()?.id;
+    if (!userId || this._cachedAt() !== null || this._status() !== 'loaded') return;
+    if (!this.isDefaultView()) return;
+    await this.snapshots.save({
+      userId,
+      cards: this._cards(),
+      hasMore: this._hasMore(),
+      summary: this._summary(),
+      sets: this._sets(),
+    });
+  }
+
+  /** Re-reads the unfiltered first page and stores it, without touching what is on screen. */
+  private async refreshSnapshot(): Promise<void> {
+    const userId = this.auth.user()?.id;
+    if (!userId || !this.connectivity.online()) return;
+    const query: CollectionQuery = { ...NO_FILTERS, sort: 'updated' };
+    try {
+      const [page, summary, sets] = await Promise.all([
+        this.repository.list(query, { offset: 0, limit: PAGE_SIZE }),
+        this.repository.summarize(query),
+        this.repository.listSets(),
+      ]);
+      if (this.auth.user()?.id !== userId) return;
+      await this.snapshots.save({
+        userId,
+        cards: page.items,
+        hasMore: page.hasMore,
+        summary,
+        sets,
+      });
+    } catch {
+      // The old copy stays; the next successful load replaces it.
+    }
+  }
+
+  /** Offline (or unreachable): show the copy saved on this device, or explain there is none. */
+  private async showSavedCopy(
+    id: number,
+    query: CollectionQuery,
+    failure: OwnedCardsError,
+  ): Promise<void> {
+    const userId = this.auth.user()?.id;
+    const snapshot = userId ? await this.snapshots.load(userId) : null;
+    if (id !== this.requestId) return;
+    this._refreshing.set(false);
+    if (!snapshot) {
+      this._error.set(failure);
+      this._status.set('error');
+      return;
+    }
+    const cards = applyCollectionQuery(snapshot.cards, query);
+    this._cards.set(cards);
+    this._hasMore.set(false);
+    this._summary.set(
+      hasActiveFilters(query) ? summarizeCards(cards) : (snapshot.summary ?? summarizeCards(cards)),
+    );
+    this._sets.set(snapshot.sets);
+    this._cachedAt.set(snapshot.savedAt);
+    this._cachedPartial.set(snapshot.hasMore);
+    this._status.set('loaded');
+    this.stale = true;
   }
 }

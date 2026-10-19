@@ -3,15 +3,17 @@ import { RouterOutlet } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { AuthService } from './core/auth/auth.service';
 import { AppShell } from './shared/ui/app-shell/app-shell';
+import { SystemBanners } from './shared/ui/system-banners/system-banners';
 import { StatusRegion } from './shared/ui/status-region/status-region';
 import { TabBar, TabBarItem } from './shared/ui/tab-bar/tab-bar';
 
 @Component({
   selector: 'pb-root',
-  imports: [RouterOutlet, TranslocoPipe, AppShell, TabBar, StatusRegion],
+  imports: [RouterOutlet, TranslocoPipe, AppShell, TabBar, StatusRegion, SystemBanners],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <pb-app-shell>
+      <pb-system-banners banner />
       <router-outlet />
       <pb-status-region />
       @if (auth.isAuthenticated()) {

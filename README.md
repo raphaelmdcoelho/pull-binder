@@ -1,8 +1,8 @@
-# PullBinder
+# Pull Binder
 
 Mobile-first PWA for managing your physical Pokémon TCG cards. Vocabulary: [GLOSSARY.md](GLOSSARY.md). Plan and milestones: [docs/implementation-plan.md](docs/implementation-plan.md).
 
-Status: M0 (tooling), M1 (shell, i18n, UI shims) and M2 (Supabase auth, database schema) and M3 (catalog search) and M4 (add Owned cards) and M5 (browse, filter, sort, edit, remove) are done. PWA/offline polish (M6) is next.
+Status: M0 (tooling), M1 (shell, i18n, UI shims) and M2 (Supabase auth, database schema) and M3 (catalog search) and M4 (add Owned cards) and M5 (browse, filter, sort, edit, remove) are done. M6 (installable PWA, offline read-only Collection) is done.
 
 ## Develop
 
@@ -15,6 +15,7 @@ npm run lint
 npm test -- --watch=false
 npm run format:check
 npm run build        # dist/pull-binder/browser (production, with the service worker)
+npm run icons        # re-render the PWA icons from assets/icons/*.svg
 npm run test:sql     # migrations + RLS tests in an in-memory Postgres (no Docker)
 ```
 

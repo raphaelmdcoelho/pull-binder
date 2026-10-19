@@ -1,6 +1,8 @@
 import { DOCUMENT } from '@angular/common';
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { AuthError, AuthRetryableFetchError, Session } from '@supabase/supabase-js';
+import { environment } from '../../../environments/environment';
+import { ConnectivityService } from '../pwa/connectivity.service';
 import { SUPABASE } from '../supabase/supabase.client';
 
 export type AuthErrorCode =
@@ -33,10 +35,14 @@ export function toAuthErrorCode(error: AuthError): AuthErrorCode {
   }
 }
 
+/** How long start-up waits for the client to read (and refresh) the stored login. */
+export const SESSION_WAIT_MS = 3000;
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly supabase = inject(SUPABASE);
   private readonly document = inject(DOCUMENT);
+  private readonly connectivity = inject(ConnectivityService);
 
   private readonly _session = signal<Session | null>(null);
   private readonly _ready = signal(false);
@@ -54,14 +60,40 @@ export class AuthService {
 
   /** Restores the session and keeps it in sync. Awaited at startup so guards see the truth. */
   async init(): Promise<void> {
+    let restoredOffline = false;
     try {
-      const { data } = await this.supabase.auth.getSession();
-      this._session.set(data.session);
+      // An expired access token cannot be refreshed without a network, and the client then keeps
+      // retrying for up to half a minute before it reports "no session", although the login is
+      // intact in storage. So when offline, or when the client is slow to answer, start from the
+      // stored login (read-only in practice, since every write needs the network): once online the
+      // client refreshes the token itself, or signs the user out if the server revoked the login.
+      let session = this.connectivity.online() ? null : this.readStoredSession();
+      restoredOffline = session !== null;
+      if (!restoredOffline) {
+        const answer = await Promise.race([
+          this.supabase.auth.getSession(),
+          new Promise<'slow'>((resolve) => setTimeout(() => resolve('slow'), SESSION_WAIT_MS)),
+        ]);
+        if (
+          answer === 'slow' ||
+          (!answer.data.session && answer.error instanceof AuthRetryableFetchError)
+        ) {
+          session = this.readStoredSession();
+          restoredOffline = session !== null;
+        } else {
+          session = answer.data.session;
+        }
+      }
+      this._session.set(session);
     } catch {
       this._session.set(null);
     }
     // The callback must not await Supabase calls (it runs inside the client's lock).
-    this.supabase.auth.onAuthStateChange((_event, session) => this._session.set(session));
+    this.supabase.auth.onAuthStateChange((event, session) => {
+      if (restoredOffline && event === 'INITIAL_SESSION' && !session) return;
+      restoredOffline = false;
+      this._session.set(session);
+    });
     this._ready.set(true);
   }
 
@@ -95,6 +127,20 @@ export class AuthService {
     const { error } = await this.supabase.auth.signOut();
     // Even if the server call fails, the local session is cleared by the client.
     return error ? { ok: false, code: toAuthErrorCode(error) } : { ok: true, value: undefined };
+  }
+
+  /** The login the Supabase client keeps in localStorage, if it is there and well formed. */
+  private readStoredSession(): Session | null {
+    try {
+      const key = `sb-${new URL(environment.supabaseUrl).hostname.split('.')[0]}-auth-token`;
+      const raw = this.document.defaultView?.localStorage.getItem(key);
+      const stored = raw ? (JSON.parse(raw) as Partial<Session> | null) : null;
+      return stored?.access_token && stored.refresh_token && stored.user?.id
+        ? (stored as Session)
+        : null;
+    } catch {
+      return null;
+    }
   }
 
   private origin(path: string): string {

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <title>Pull Binder</title>
+  <rect width="512" height="512" rx="112" fill="#2f6f3a"/>
+  <g transform="translate(256 256) scale(1.3) translate(-260 -252)">
+    <path d="M148 364C148 220 250 140 372 140C372 270 300 372 148 364Z" fill="#f3f8ee"/>
+    <path d="M148 364L322 188" fill="none" stroke="#2f6f3a" stroke-width="14" stroke-linecap="round"/>
+    <path d="M214 304L250 300M246 270L292 262M278 238L322 230" fill="none" stroke="#2f6f3a" stroke-width="10" stroke-linecap="round"/>
+  </g>
+</svg>
