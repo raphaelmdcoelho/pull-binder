@@ -7,7 +7,11 @@ insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-00000000000b', 'b@example.test');
 
 -- profile trigger
-select is((select count(*)::int from public.profiles), 2, 'a profile is created per auth user');
+select is(
+  (select count(*)::int from public.profiles where id in ('00000000-0000-0000-0000-00000000000a', '00000000-0000-0000-0000-00000000000b')),
+  2,
+  'a profile is created per auth user'
+);
 
 -- as user A
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-00000000000a","role":"authenticated"}', true);

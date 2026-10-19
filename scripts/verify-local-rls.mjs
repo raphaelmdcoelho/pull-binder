@@ -115,6 +115,124 @@ check(
   JSON.stringify(bProfiles),
 );
 
+// Browse queries as the repository sends them (M5): escaped ilike, multi-column order, range, conflicts.
+const seed = [
+  {
+    ...identity,
+    ...snapshot,
+    card_id: 'x-1',
+    card_name: 'Pikachu',
+    set_id: 'a',
+    set_name: 'Alpha',
+    finish: 'normal',
+    quantity: 3,
+  },
+  {
+    ...identity,
+    ...snapshot,
+    card_id: 'x-2',
+    card_name: '100%_Pichu',
+    set_id: 'a',
+    set_name: 'Alpha',
+    finish: 'normal',
+    quantity: 2,
+    language: 'ja',
+  },
+  {
+    ...identity,
+    ...snapshot,
+    card_id: 'x-3',
+    card_name: 'Charizard',
+    set_id: 'b',
+    set_name: 'Beta',
+    finish: 'normal',
+    quantity: 1,
+    condition: 'damaged',
+  },
+];
+const seeded = await a.client.from('owned_cards').insert(seed).select('id, card_id');
+check(seeded.data?.length === 3, 'A seeds three more Owned cards', seeded.error?.message);
+const escape = (t) => t.replace(/[\\%_]/g, '\\$&');
+const byName = async (text) =>
+  (
+    await a.client
+      .from('owned_cards')
+      .select('card_name')
+      .ilike('card_name', `%${escape(text)}%`)
+      .like('card_id', 'x-%')
+  ).data
+    ?.map((r) => r.card_name)
+    .sort();
+check(JSON.stringify(await byName('PIK')) === '["Pikachu"]', 'ilike is case-insensitive');
+check(
+  JSON.stringify(await byName('%')) === '["100%_Pichu"]',
+  'a typed % is matched literally, not as a wildcard',
+  JSON.stringify(await byName('%')),
+);
+check(
+  JSON.stringify(await byName('_')) === '["100%_Pichu"]',
+  'a typed _ is matched literally',
+  JSON.stringify(await byName('_')),
+);
+const page1 = await a.client
+  .from('owned_cards')
+  .select('card_name')
+  .like('card_id', 'x-%')
+  .order('quantity', { ascending: false })
+  .order('card_name')
+  .order('id')
+  .range(0, 1);
+const page2 = await a.client
+  .from('owned_cards')
+  .select('card_name')
+  .like('card_id', 'x-%')
+  .order('quantity', { ascending: false })
+  .order('card_name')
+  .order('id')
+  .range(2, 3);
+check(
+  page1.data?.map((r) => r.card_name).join() === 'Pikachu,100%_Pichu' &&
+    page2.data?.map((r) => r.card_name).join() === 'Charizard',
+  'order + range pages without overlap',
+  JSON.stringify([page1.data, page2.data]),
+);
+const clash = await a.client
+  .from('owned_cards')
+  .update({ condition: 'near_mint' })
+  .eq('id', seeded.data.find((r) => r.card_id === 'x-3').id)
+  .select();
+check(
+  !clash.error,
+  'a condition change with no twin just updates (different card_id so no clash)',
+  clash.error?.message,
+);
+const twin = await a.client
+  .from('owned_cards')
+  .insert({
+    ...identity,
+    ...snapshot,
+    card_id: 'x-1',
+    card_name: 'Pikachu',
+    set_id: 'a',
+    set_name: 'Alpha',
+    finish: 'normal',
+    condition: 'damaged',
+    quantity: 4,
+  })
+  .select('id')
+  .single();
+const twinClash = await a.client
+  .from('owned_cards')
+  .update({ condition: 'near_mint' })
+  .eq('id', twin.data.id);
+check(
+  twinClash.error?.code === '23505',
+  'changing the condition onto an existing twin conflicts (23505), which triggers the merge',
+  twinClash.error?.code,
+);
+const gone = await a.client.from('owned_cards').delete().like('card_id', 'x-%').select('id');
+check(gone.data?.length === 4, 'delete returns the removed rows', JSON.stringify(gone));
+
 const anonRead = await anon.from('owned_cards').select('id');
 check(
   !!anonRead.error && anonRead.error.code === '42501',
