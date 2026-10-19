@@ -4,6 +4,10 @@ updates:
     directory: /
     schedule: { interval: weekly }
     commit-message: { prefix: 'chore(deps)' }
+    ignore:
+      # @angular/build requires typescript >=6.0 <6.1; follow Angular, not latest.
+      - dependency-name: typescript
+        update-types: ['version-update:semver-major', 'version-update:semver-minor']
     groups:
       angular: { patterns: ['@angular/*', '@angular-eslint/*', 'angular-eslint'] }
       grass-ds: { patterns: ['@grass-ds/*'] }
