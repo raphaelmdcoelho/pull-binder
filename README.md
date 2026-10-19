@@ -2,7 +2,7 @@
 
 Mobile-first PWA for managing your physical Pokémon TCG cards. Vocabulary: [GLOSSARY.md](GLOSSARY.md). Plan and milestones: [docs/implementation-plan.md](docs/implementation-plan.md).
 
-Status: M0 (tooling), M1 (shell, i18n, UI shims) and M2 (Supabase auth, database schema) are done. Catalog search and the collection come next.
+Status: M0 (tooling), M1 (shell, i18n, UI shims) and M2 (Supabase auth, database schema) and M3 (catalog search) are done. Adding cards to the collection comes next.
 
 ## Develop
 

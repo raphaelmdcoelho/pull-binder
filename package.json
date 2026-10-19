@@ -28,6 +28,7 @@
     "@grass-ds/tokens": "^0.6.0",
     "@jsverse/transloco": "^8.4.0",
     "@supabase/supabase-js": "^2.118.0",
+    "idb-keyval": "^6.3.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
   },
@@ -50,7 +51,7 @@
     "typescript-eslint": "^8.71.2",
     "vitest": "^5.0.0"
   },
-  "description": "Mobile-first PWA for managing physical Pok\u00e9mon TCG cards.",
+  "description": "Mobile-first PWA for managing physical Pokémon TCG cards.",
   "license": "MIT",
   "engines": {
     "node": ">=26"

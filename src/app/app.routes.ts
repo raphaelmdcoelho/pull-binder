@@ -24,6 +24,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/search/search-page').then((m) => m.SearchPage),
       },
       {
+        path: 'card/:id',
+        loadComponent: () =>
+          import('./features/card/card-detail-page').then((m) => m.CardDetailPage),
+      },
+      {
         path: 'collection',
         loadComponent: () =>
           import('./features/collection/collection-page').then((m) => m.CollectionPage),

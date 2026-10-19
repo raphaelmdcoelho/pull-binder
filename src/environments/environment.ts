@@ -7,5 +7,6 @@
  */
 export const environment = {
   supabaseUrl: 'https://cfqqwlggqybyjhtkkiha.supabase.co',
+  catalogApiUrl: 'https://api.tcgdex.net/v2',
   supabasePublishableKey: 'sb_publishable_K86lMQGxzUrc45wh8EJuwQ_0S_Ny9fa',
 };

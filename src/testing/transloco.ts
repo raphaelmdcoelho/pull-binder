@@ -20,6 +20,7 @@ export function provideTestI18n(): ReturnType<typeof provideTransloco> {
       availableLangs: ['en', 'pt-BR'],
       defaultLang: 'en',
       fallbackLang: 'en',
+      reRenderOnLangChange: true,
       prodMode: true,
     },
     loader: InlineLoader,

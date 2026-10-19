@@ -13,7 +13,21 @@
     "label": "Nome da carta",
     "placeholder": "Buscar no catálogo",
     "clear": "Limpar busca",
-    "hint": "A busca no catálogo chega na próxima versão."
+    "hint": "Digite pelo menos 2 letras para buscar em todas as cartas do catálogo.",
+    "tooShort": "Digite pelo menos 2 letras.",
+    "loading": "Carregando",
+    "loadMore": "Carregar mais",
+    "retry": "Tentar de novo",
+    "errorTitle": "A busca falhou",
+    "emptyTitle": "Nenhuma carta encontrada",
+    "emptyBody": "Nada corresponde a \"{{query}}\". Confira a grafia ou tente um nome mais curto.",
+    "fellBack": "Não há nada no seu idioma, então estes resultados estão em inglês.",
+    "count": "{{count}} cartas exibidas",
+    "errors": {
+      "network": "Não foi possível acessar o catálogo. Verifique sua conexão e tente de novo.",
+      "not-found": "O catálogo não tem nada para isso.",
+      "unknown": "Algo deu errado na busca."
+    }
   },
   "collection": {
     "title": "Coleção",
@@ -64,5 +78,22 @@
       "network": "Não foi possível acessar o servidor. Verifique sua conexão.",
       "unknown": "Algo deu errado. Tente novamente."
     }
+  },
+  "card": {
+    "back": "Voltar à busca",
+    "set": "Expansão",
+    "rarity": "Raridade",
+    "finishes": "Acabamentos",
+    "errors": {
+      "network": "Não foi possível acessar o catálogo. Verifique sua conexão.",
+      "not-found": "Esta carta não está no catálogo.",
+      "unknown": "Não foi possível carregar esta carta."
+    }
+  },
+  "finish": {
+    "normal": "Normal",
+    "holo": "Holo",
+    "reverse_holo": "Reverse holo",
+    "other": "Outro"
   }
 }

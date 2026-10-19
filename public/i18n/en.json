@@ -13,7 +13,21 @@
     "label": "Card name",
     "placeholder": "Search the catalog",
     "clear": "Clear search",
-    "hint": "Catalog search arrives with the next release."
+    "hint": "Type at least 2 letters to search every card in the catalog.",
+    "tooShort": "Type at least 2 letters.",
+    "loading": "Loading",
+    "loadMore": "Load more",
+    "retry": "Try again",
+    "errorTitle": "Search failed",
+    "emptyTitle": "No cards found",
+    "emptyBody": "Nothing matches \"{{query}}\". Check the spelling or try a shorter name.",
+    "fellBack": "Nothing in your language, so these results are in English.",
+    "count": "{{count}} cards shown",
+    "errors": {
+      "network": "Can't reach the catalog. Check your connection and try again.",
+      "not-found": "The catalog has nothing for that.",
+      "unknown": "Something went wrong while searching."
+    }
   },
   "collection": {
     "title": "Collection",
@@ -64,5 +78,22 @@
       "network": "Can't reach the server. Check your connection.",
       "unknown": "Something went wrong. Try again."
     }
+  },
+  "card": {
+    "back": "Back to search",
+    "set": "Set",
+    "rarity": "Rarity",
+    "finishes": "Finishes",
+    "errors": {
+      "network": "Can't reach the catalog. Check your connection.",
+      "not-found": "This card is not in the catalog.",
+      "unknown": "Couldn't load this card."
+    }
+  },
+  "finish": {
+    "normal": "Normal",
+    "holo": "Holo",
+    "reverse_holo": "Reverse holo",
+    "other": "Other"
   }
 }
