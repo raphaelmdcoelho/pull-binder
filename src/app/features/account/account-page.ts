@@ -1,16 +1,29 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Router } from '@angular/router';
+import { GrButton } from '@grass-ds/angular';
 import { TranslocoPipe } from '@jsverse/transloco';
+import { AuthService } from '../../core/auth/auth.service';
 import { LanguageService } from '../../core/i18n/language.service';
-import { AppLang, SUPPORTED_LANGS, isAppLang } from '../../core/i18n/languages';
+import { SUPPORTED_LANGS, isAppLang } from '../../core/i18n/languages';
 import { PbSelect } from '../../shared/ui/select/select';
 
 @Component({
   selector: 'pb-account-page',
-  imports: [TranslocoPipe, PbSelect],
+  imports: [TranslocoPipe, PbSelect, GrButton],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="gr-stack">
       <h1 class="gr-display">{{ 'account.title' | transloco }}</h1>
+
+      @if (auth.user(); as user) {
+        <section class="gr-card" aria-labelledby="account-who">
+          <div class="gr-card__body gr-stack">
+            <h2 class="gr-card__title" id="account-who">{{ auth.displayName() }}</h2>
+            <p class="gr-text-muted">{{ 'account.email' | transloco }}: {{ user.email }}</p>
+          </div>
+        </section>
+      }
+
       <div class="gr-field">
         <label class="gr-field__label" for="app-language">{{
           'account.language' | transloco
@@ -31,14 +44,25 @@ import { PbSelect } from '../../shared/ui/select/select';
           }
         </select>
       </div>
+
+      <button grButton variant="secondary" type="button" (click)="signOut()">
+        {{ 'auth.signOut' | transloco }}
+      </button>
     </div>
   `,
 })
 export class AccountPage {
+  protected readonly auth = inject(AuthService);
   protected readonly language = inject(LanguageService);
+  private readonly router = inject(Router);
   protected readonly langs = SUPPORTED_LANGS;
 
   protected onChange(value: string): void {
-    if (isAppLang(value)) void this.language.set(value as AppLang);
+    if (isAppLang(value)) void this.language.set(value);
+  }
+
+  protected async signOut(): Promise<void> {
+    await this.auth.signOut();
+    await this.router.navigateByUrl('/login');
   }
 }

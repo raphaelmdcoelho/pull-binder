@@ -1,5 +1,7 @@
 {
-  "app": { "name": "PullBinder" },
+  "app": {
+    "name": "PullBinder"
+  },
   "nav": {
     "label": "Principal",
     "search": "Buscar",
@@ -22,7 +24,45 @@
     "title": "Conta",
     "language": "Idioma do app",
     "languageHint": "É o idioma da interface, não o das suas cartas.",
-    "lang": { "en": "English", "pt-BR": "Português (Brasil)" }
+    "lang": {
+      "en": "English",
+      "pt-BR": "Português (Brasil)"
+    },
+    "email": "E-mail",
+    "name": "Nome"
   },
-  "ui": { "loading": "Carregando" }
+  "ui": {
+    "loading": "Carregando"
+  },
+  "auth": {
+    "loginTitle": "Entrar",
+    "signUpTitle": "Criar conta",
+    "email": "E-mail",
+    "emailHint": "Usamos apenas para você entrar.",
+    "password": "Senha",
+    "passwordHint": "Pelo menos 8 caracteres.",
+    "logIn": "Entrar",
+    "signUp": "Criar conta",
+    "google": "Continuar com o Google",
+    "or": "ou",
+    "noAccount": "Ainda não tem conta?",
+    "haveAccount": "Já tem uma conta?",
+    "toSignUp": "Criar conta",
+    "toLogIn": "Entrar",
+    "signOut": "Sair",
+    "working": "Aguarde",
+    "confirmTitle": "Verifique seu e-mail",
+    "confirmBody": "Enviamos um link para confirmar seu endereço. Abra-o e depois entre.",
+    "errors": {
+      "required": "Este campo é obrigatório.",
+      "email": "Digite um endereço como nome@exemplo.com.",
+      "minlength": "Use pelo menos 8 caracteres.",
+      "invalid_credentials": "E-mail ou senha incorretos.",
+      "email_not_confirmed": "Confirme seu e-mail primeiro. Procure o link na sua caixa de entrada.",
+      "weak_password": "Essa senha é fraca demais. Tente uma mais longa.",
+      "rate_limited": "Muitas tentativas. Aguarde um momento e tente de novo.",
+      "network": "Não foi possível acessar o servidor. Verifique sua conexão.",
+      "unknown": "Algo deu errado. Tente novamente."
+    }
+  }
 }
