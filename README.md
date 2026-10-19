@@ -2,7 +2,7 @@
 
 Mobile-first PWA for managing your physical Pokémon TCG cards. Vocabulary: [GLOSSARY.md](GLOSSARY.md). Plan and milestones: [docs/implementation-plan.md](docs/implementation-plan.md).
 
-Status: M0 (tooling), M1 (shell, i18n, UI shims) and M2 (Supabase auth, database schema) and M3 (catalog search) and M4 (add Owned cards) and M5 (browse, filter, sort, edit, remove) are done. M6 (installable PWA, offline read-only Collection) is done.
+Status: M0 (tooling), M1 (shell, i18n, UI shims) and M2 (Supabase auth, database schema) and M3 (catalog search) and M4 (add Owned cards) and M5 (browse, filter, sort, edit, remove) are done. M6 (installable PWA, offline read-only Collection) and M7 (release pipeline) are done.
 
 ## Develop
 
@@ -16,10 +16,21 @@ npm test -- --watch=false
 npm run format:check
 npm run build        # dist/pull-binder/browser (production, with the service worker)
 npm run icons        # re-render the PWA icons from assets/icons/*.svg
+npm run e2e          # Playwright smoke test against the production build (build first)
 npm run test:sql     # migrations + RLS tests in an in-memory Postgres (no Docker)
 ```
 
 To try the service worker locally, serve the build: `npx http-server dist/pull-binder/browser -p 8080 -c-1`.
+
+## Release and deploy
+
+Work happens on a feature branch and reaches `main` through a pull request (squash merge, the PR title is a Conventional Commit). A merge to `main` runs `.github/workflows/release.yml`:
+
+1. `release`: semantic-release reads the commits since the last tag. `feat` is a minor, `fix` a patch, `!` or `BREAKING CHANGE` a major; `docs`, `chore`, `ci`, `test`, `refactor` release nothing. If nothing is releasable the workflow ends here: no tag and **no deploy**. Otherwise it creates the tag `vX.Y.Z` and the GitHub Release.
+2. `migrate`: only when the release adds or changes files in `supabase/migrations`. It waits for approval on the `production-db` environment, then runs `supabase db push`.
+3. `deploy`: builds the tag with the version stamped in (shown on the Account page) and publishes it to Cloudflare Pages.
+
+`keepalive.yml` pings the database weekly so the free project does not pause. Pull requests run `ci.yml` (Commitlint; lint, format, unit tests, SQL checks, build and a Playwright smoke test). Setup, the GitHub secrets, variables and environments to create, the recommended branch protection and the one-time migration history check are in [docs/implementation-plan.md](docs/implementation-plan.md#16-m7-as-built-2026-10-19).
 
 ## Supabase
 

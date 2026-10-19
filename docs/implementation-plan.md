@@ -110,7 +110,7 @@ Later (not in plan): Binders, Wishlist, offline writes, prices, import/export.
 
 ## 5. CI/CD
 
-### 5.1 `ci.yml` (pull_request + push to non-main)
+### 5.1 `ci.yml` (pull_request)
 
 Jobs run on `ubuntu-latest`, Node pinned via `.nvmrc`, npm cache.
 
@@ -128,7 +128,7 @@ Single workflow so the default `GITHUB_TOKEN` limitation (tags it creates do not
 2. `migrate` job (`needs: release`, `if: published`, `environment: production-db` with required reviewer): `supabase link --project-ref $SUPABASE_PROJECT_REF`, `supabase db push`. Runs before deploy so the new frontend never meets an old schema; migrations must stay backward compatible with the previous release (expand/contract).
 3. `deploy` job (`needs: [release, migrate]`): checkout at the release tag, generate environment file, `ng build`, `cloudflare/wrangler-action` with `pages deploy dist/pull-binder/browser --project-name=pull-binder --branch=main`. Environment `production` (URL = site URL).
    Concurrency group `release`, no cancel. If `migrate` is skipped (no `supabase/migrations` diff) `deploy` still runs: use `if: always() && needs.release.outputs.published == 'true' && needs.migrate.result != 'failure'`.
-   Open question for implementation: whether the approval gate should apply to every release or only releases that contain migrations (the latter needs a path-diff step choosing between two jobs).
+   Decided in M7: the gate applies only to releases that add or change files under `supabase/migrations` (see section 16).
 
 ### 5.3 `keepalive.yml`
 
@@ -324,3 +324,87 @@ Notes: only production (`--branch=main`) deploys use the project URL; Cloudflare
 - **`_headers`** still matches: `index.html`, `ngsw.json`, the worker files, the manifest and `i18n/*` revalidate; `/main-*`, `/chunk-*`, `/styles-*`, `/media/*` are immutable. Icons and favicons keep Cloudflare's default (revalidate), and the service worker's hash check keeps its copy fresh.
 - **Verified in a real Chromium** (served from `dist`, outside the repo): the service worker activates, `Page.getInstallabilityErrors` is empty, the manifest has no errors, an offline reload shows the shell, a seeded expired login plus a saved Collection opens offline with the banner, the saved list, disabled Edit/Remove and working filters, and a TCGdex image and API response land in the SW caches as `cors` responses. Not verified: an actual phone install, and the update prompt against a real second deploy (covered by unit tests with a fake `SwUpdate`).
 - **Known limits.** With a "connected but dead" network (`navigator.onLine` true), supabase-js may wait up to about 30 s before the Collection falls back to the saved copy. Offline writes are out of scope (the plan's "Later"). Saved pages only cover what had been scrolled; a very large Collection is partial offline by design.
+
+## 16. M7 as built (2026-10-19)
+
+### Release flow
+
+`.github/workflows/release.yml` runs on every push to `main` (and by hand). Everything is one workflow because tags created with `GITHUB_TOKEN` do not trigger other workflows.
+
+1. **`release`** (permissions `contents: write`): `npx semantic-release` with `commit-analyzer`, `release-notes-generator`, `exec` (writes `published` and `version` to `$GITHUB_OUTPUT`) and `github` (tag `vX.Y.Z` and the GitHub Release; no issue/PR comments, so no extra permissions). No `git` plugin (no commit back to `main`, so branch protection stays strict), no npm publish, no changelog file (the GitHub Release holds the notes). A following step compares the new tag with the previous one and sets `migrations=true` when files under `supabase/migrations` were added or changed. The first release has no previous tag and counts as having migrations.
+2. **`migrate`** (only when `migrations=true`, environment **`production-db`**, which the owner configures with required reviewers): `supabase link`, `supabase migration list`, `supabase db push --dry-run`, `supabase db push`, with CLI 2.121.0 pinned. Fails with a pointer to the one-time alignment below if the histories disagree. Missing secrets/variables fail with a clear message.
+3. **`deploy`** (environment **`production`**): checks out the tag, installs, stamps the version (`scripts/stamp-version.mjs` rewrites `src/app/version.ts`; the Account page shows `Version 1.2.3 (abc1234)`, local builds show `dev`), builds and runs `cloudflare/wrangler-action@v4` (`wranglerVersion: 4`). It runs when a release was published and `migrate` was skipped or succeeded; a failed or cancelled `migrate` blocks it, so the new front end never meets an old schema. Migrations must therefore stay backward compatible with the previous release (expand, then contract in a later release).
+
+`workflow_dispatch` has a `redeploy` option: it skips semantic-release and deploys the latest tag again (for example after fixing a Cloudflare secret).
+
+**Pushes with no releasable commit** (only `docs`, `test`, `chore`, `ci`, `refactor`, `style`, `build`): no tag, no release, **no deploy**. Rationale: the live site then always equals a tagged, reproducible version shown on the Account page; a docs/CI-only merge cannot change the app; and a deploy that changes nothing still costs a build and risks an unreviewed state. The trade-off is that `chore(deps)` merges (Dependabot) reach the site only with the next `feat`/`fix`; retitle the PR `fix(deps): ...` when a dependency bump must go live (squash merge uses the PR title), or merge it together with a `fix`. The `redeploy` dispatch only redeploys the latest tag, it never ships unreleased commits. Because the history already contains `feat` commits, the first run after the M7 merge creates **v1.0.0** and deploys it.
+
+`ci.yml` (pull requests): `Commitlint` job and `Lint, test, build` job (lint, format check, unit tests, SQL checks, production build, Playwright smoke). `deploy.yml` was deleted. Concurrency cancels superseded PR runs; `release.yml` queues instead of cancelling. Permissions are `contents: read` everywhere except the `release` job (`contents: write`); `keepalive.yml` has none. Third-party actions are pinned by major version (`actions/*@v7`, `cloudflare/wrangler-action@v4`, `supabase/setup-cli@v1`); Dependabot keeps them current.
+
+### One-time migration history alignment
+
+The hosted project recorded its three migrations under the versions the connector generated: `20261019015532` (profiles), `20261019015539` (owned_cards), `20261019015541` (ping). The repository files had been named `20261018120000/0100/0200`, so the CLI would have considered the hosted ones unknown and the local ones unapplied.
+
+**Fix applied in this PR (no hosted change, no manual step):** the three local files were renamed to the hosted versions (`git mv`; contents untouched). The CLI now sees identical histories and `supabase db push` reports "Remote database is up to date". `scripts/validate-sql.mjs` also rejects migration names that are not `<14 digits>_<snake_case>.sql` or that repeat a version.
+
+**Before the first release, the owner should confirm** (read-only) that the histories match:
+
+```sh
+npx supabase login                       # or export SUPABASE_ACCESS_TOKEN
+npx supabase link --project-ref cfqqwlggqybyjhtkkiha
+npx supabase migration list              # Local and Remote columns must show the same 3 versions
+npx supabase db push --dry-run           # must say "Remote database is up to date"
+```
+
+If instead the Remote column shows other versions than the local files (for example the history was changed again), the alternative that touches only the history table, not the schema, is:
+
+```sh
+npx supabase migration repair --status reverted <each remote version not in the repo>
+npx supabase migration repair --status applied  <each local version missing remotely>
+```
+
+Check the SQL of each file against what is deployed before marking it applied. Never mark a migration applied that has not run.
+
+### Keep-alive
+
+`keepalive.yml` runs weekly (Mondays 09:00 UTC) and by hand. It POSTs to `https://<ref>.supabase.co/rest/v1/rpc/ping` with the publishable key in the `apikey` header (the key is public by design, so it is a variable, not a secret) and fails with an error annotation unless the body is exactly `true`. GitHub disables scheduled workflows after 60 days without repository activity; any push or merged PR re-arms it.
+
+### Playwright smoke test
+
+`npm run e2e` (config `playwright.config.ts`, tests `e2e/smoke.e2e.ts`, Chromium, Pixel 7 profile) runs against the production build served by `scripts/serve-dist.mjs` (static files with the `/* /index.html` fallback, like `_redirects`). Supabase and TCGdex requests are answered by `page.route`, the service worker is blocked, and a test asserts that nothing else leaves localhost. It checks: a signed-out visit to `/collection` redirects to `/login`; the language switch on the Account page (plus the version line); the empty Collection and a mocked empty search; the manifest and its icons are reachable and valid. The sign-in is a fabricated, unexpired session in `localStorage`, so no credentials exist. Locally: `npm run build && npm run e2e` (`npx playwright install chromium` once; `PW_CHROMIUM_PATH` uses an installed browser).
+
+### What the owner must create in GitHub
+
+Repository, Settings, Secrets and variables, Actions:
+
+| Kind     | Name                       | Value                                                             |
+| -------- | -------------------------- | ----------------------------------------------------------------- |
+| Secret   | `CLOUDFLARE_API_TOKEN`     | Already set (Cloudflare Pages, Edit)                              |
+| Secret   | `CLOUDFLARE_ACCOUNT_ID`    | Already set                                                       |
+| Variable | `CLOUDFLARE_PROJECT_NAME`  | Already set (`pull-binder`)                                       |
+| Secret   | `SUPABASE_ACCESS_TOKEN`    | Supabase dashboard, Account, Access Tokens (a new personal token) |
+| Secret   | `SUPABASE_DB_PASSWORD`     | The database password of the project                              |
+| Variable | `SUPABASE_PROJECT_REF`     | `cfqqwlggqybyjhtkkiha`                                            |
+| Variable | `SUPABASE_PUBLISHABLE_KEY` | The public `sb_publishable_...` key (same as in `environment.ts`) |
+
+Settings, Environments:
+
+- **`production-db`**: add yourself under Required reviewers (and tick "Prevent self-review" only if someone else can approve). Optionally restrict deployment branches to `main`. Secrets can live at repository level.
+- **`production`**: no reviewers needed (deploys after the gate). Restrict to `main` if you like.
+
+Settings, Actions, General: Workflow permissions can stay "Read repository contents" (the release job asks for `contents: write` itself). Enable "Allow GitHub Actions to create and approve pull requests" only if you later want it; it is not needed.
+
+### Branch protection for `main` (Settings, Branches, Add rule, or a ruleset)
+
+- Require a pull request before merging (no direct pushes; include administrators if you want the rule to bind you too).
+- Require status checks to pass: **`Commitlint`** and **`Lint, test, build`**; require branches to be up to date.
+- Allow squash merging only, default message "Pull request title"; the PR title must be a Conventional Commit because it becomes the commit semantic-release reads.
+- Require linear history; block force pushes and deletions.
+- Do not require signed commits unless you set up signing (the release bot's tag is not a commit on `main`).
+- Because the release job pushes only a tag and never a commit, no bypass for `github-actions[bot]` is needed.
+
+### Risks
+
+- A failed `deploy` after a successful `release` leaves a tag and Release without a live deploy: re-run the job or use the `redeploy` dispatch; do not re-run `release`.
+- Rejecting the `production-db` approval leaves the tag without a deploy and the migration unapplied.
+- The Cloudflare per-deploy hash URLs are still not in the Supabase/Google redirect lists (only the main URL signs in).
