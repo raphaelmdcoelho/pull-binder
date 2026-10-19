@@ -50,3 +50,7 @@ Thumbs.db
 .claude/settings.local.json
 supabase/.env
 supabase/.temp/
+
+# Playwright
+/test-results
+/playwright-report
